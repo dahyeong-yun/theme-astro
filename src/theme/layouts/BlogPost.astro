@@ -1,0 +1,76 @@
+---
+import { Image } from 'astro:assets'
+import type { CollectionEntry } from 'astro:content'
+import config from 'virtual:blog-config'
+import BaseHead from '../components/BaseHead.astro'
+import Footer from '../components/Footer.astro'
+import FormattedDate from '../components/FormattedDate.astro'
+import Header from '../components/Header.astro'
+
+type Props = CollectionEntry<'posts'>['data']
+
+const { title, description, date, banner } = Astro.props
+---
+
+<html lang={config.site.language}>
+  <head>
+    <BaseHead title={`${title} | ${config.site.title}`} description={description ?? config.site.description} />
+    <style>
+      main {
+        width: 720px;
+        max-width: calc(100% - 2em);
+        margin: 0 auto;
+        padding: 2em 1em;
+      }
+      .hero-image {
+        width: 100%;
+        margin-bottom: 2rem;
+      }
+      .hero-image img {
+        display: block;
+        margin: 0 auto;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      }
+      .prose {
+        color: var(--color-text-primary);
+      }
+      .title {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--color-border);
+      }
+      .title h1 {
+        margin: 0 0 0.5rem 0;
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+      }
+      .date {
+        font-size: 0.875rem;
+        color: var(--color-text-secondary);
+      }
+    </style>
+  </head>
+  <body>
+    <Header />
+    <main>
+      <article>
+        {banner && (
+          <div class="hero-image">
+            <Image width={1020} height={510} src={banner} alt={title} />
+          </div>
+        )}
+        <div class="prose">
+          <div class="title">
+            <div class="date"><FormattedDate date={date} /></div>
+            <h1>{title}</h1>
+          </div>
+          <slot />
+        </div>
+      </article>
+    </main>
+    <Footer />
+  </body>
+</html>

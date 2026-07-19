@@ -1,0 +1,55 @@
+---
+import config from 'virtual:blog-config'
+import HeaderLink from './HeaderLink.astro'
+---
+
+<header>
+  <nav>
+    <h2><a href="/">{config.site.title}</a></h2>
+    <div class="nav-links">
+      {config.navigation.map((item) => (
+        <HeaderLink href={item.href}>{item.title}</HeaderLink>
+      ))}
+    </div>
+  </nav>
+</header>
+
+<style>
+  header {
+    margin: 0;
+    padding: 0 1.5em;
+    background: var(--bg-header);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 860px;
+    margin: 0 auto;
+    height: 56px;
+  }
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  h2 a {
+    text-decoration: none;
+    color: var(--color-text-primary);
+  }
+  .nav-links {
+    display: flex;
+    gap: 0.25rem;
+  }
+  @media (max-width: 720px) {
+    .nav-links {
+      gap: 0;
+    }
+  }
+</style>
