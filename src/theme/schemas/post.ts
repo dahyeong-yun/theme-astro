@@ -8,6 +8,9 @@ export const blogPostSchema = z.object({
   tags: z.array(z.string()).default([]),
   banner: z.string().optional(),  // public/ 경로 또는 URL
   draft: z.boolean().default(false),
+  slug: z.string().optional(),
 })
 
 export type BlogPost = z.infer<typeof blogPostSchema>
+
+

@@ -23,6 +23,10 @@ export function blogTheme(config: BlogConfig): AstroIntegration {
           entrypoint: 'theme-astro/src/pages/blog/[...slug].astro',
         })
         injectRoute({
+          pattern: '/about',
+          entrypoint: 'theme-astro/src/pages/about.astro',
+        })
+        injectRoute({
           pattern: '/rss.xml',
           entrypoint: 'theme-astro/src/pages/rss.xml.js',
         })
