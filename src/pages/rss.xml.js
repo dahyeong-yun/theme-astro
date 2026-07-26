@@ -11,11 +11,14 @@ export async function GET(context) {
     items: posts
       .filter((p) => !p.data.draft)
       .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-      .map((post) => ({
-        title: post.data.title,
-        description: post.data.description ?? '',
-        pubDate: post.data.date,
-        link: `/blog/${post.id}/`,
-      })),
+      .map((post) => {
+        const cleanPostId = post.id.replace(/^\/|\/$/g, '').replace(/\/index$/, '');
+        return {
+          title: post.data.title,
+          description: post.data.description ?? '',
+          pubDate: post.data.date,
+          link: `/blog/${cleanPostId}/`,
+        }
+      }),
   })
 }
