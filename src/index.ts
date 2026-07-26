@@ -1,8 +1,13 @@
 import partytown from '@astrojs/partytown'
 import mdx from '@astrojs/mdx'
 import sitemap from '@astrojs/sitemap'
+import _remarkMath from 'remark-math'
+import _rehypeKatex from 'rehype-katex'
 import type { AstroIntegration } from 'astro'
 import type { BlogConfig } from './theme/types.js'
+
+const remarkMath = (_remarkMath as any).default || _remarkMath
+const rehypeKatex = (_rehypeKatex as any).default || _rehypeKatex
 
 export function blogTheme(config: BlogConfig): AstroIntegration {
   return {
@@ -39,13 +44,18 @@ export function blogTheme(config: BlogConfig): AstroIntegration {
           site: config.site.url,
           output: 'static',
           integrations: [
-            mdx(),
+            mdx({
+              remarkPlugins: [remarkMath],
+              rehypePlugins: [rehypeKatex],
+            }),
             sitemap(),
             ...(config.analytics?.gtm?.id
               ? [partytown({ config: { forward: ['dataLayer.push'] } })]
               : []),
           ],
           markdown: {
+            remarkPlugins: [remarkMath],
+            rehypePlugins: [rehypeKatex],
             shikiConfig: {
               theme: config.theme?.codeTheme ?? 'tokyo-night',
               wrap: false,
