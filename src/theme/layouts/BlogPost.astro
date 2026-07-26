@@ -6,21 +6,36 @@ import BaseHead from '../components/BaseHead.astro'
 import Footer from '../components/Footer.astro'
 import FormattedDate from '../components/FormattedDate.astro'
 import Header from '../components/Header.astro'
+import TableOfContents from '../components/TableOfContents.astro'
 
-type Props = CollectionEntry<'posts'>['data']
+type Props = CollectionEntry<'posts'>['data'] & {
+  headings?: { depth: number; slug: string; text: string }[];
+}
 
-const { title, description, date, banner } = Astro.props
+const { title, description, date, banner, headings = [] } = Astro.props
 ---
 
 <html lang={config.site.language}>
   <head>
     <BaseHead title={`${title} | ${config.site.title}`} description={description ?? config.site.description} />
     <style>
-      main {
-        width: 720px;
-        max-width: calc(100% - 2em);
+      .post-layout {
+        display: flex;
+        justify-content: center;
+        max-width: 1120px;
         margin: 0 auto;
-        padding: 2em 1em;
+        padding: 2em 1.5rem;
+        gap: 3rem;
+      }
+      .post-content {
+        width: 720px;
+        max-width: 100%;
+        flex-shrink: 0;
+      }
+      .post-sidebar {
+        width: 240px;
+        flex-shrink: 0;
+        display: block;
       }
       .hero-image {
         width: 100%;
@@ -51,12 +66,37 @@ const { title, description, date, banner } = Astro.props
         font-size: 0.875rem;
         color: var(--color-text-secondary);
       }
+
+      /* 모바일용 TOC 래퍼 기본 스타일 */
+      .toc-mobile-wrapper {
+        display: none;
+      }
+
+      /* 반응형 분기점 (1120px 이하에서 1컬럼 모드로 전환) */
+      @media (max-width: 1120px) {
+        .post-layout {
+          flex-direction: column;
+          align-items: center;
+          padding: 2em 1rem;
+          gap: 0;
+        }
+        .post-content {
+          width: 100%;
+          max-width: 720px;
+        }
+        .post-sidebar {
+          display: none;
+        }
+        .toc-mobile-wrapper {
+          display: block;
+        }
+      }
     </style>
   </head>
   <body>
     <Header />
-    <main>
-      <article>
+    <main class="post-layout">
+      <article class="post-content">
         {banner && (
           <div class="hero-image">
             <Image width={1020} height={510} src={banner} alt={title} />
@@ -67,9 +107,19 @@ const { title, description, date, banner } = Astro.props
             <div class="date"><FormattedDate date={date} /></div>
             <h1>{title}</h1>
           </div>
+          {headings.length > 0 && (
+            <div class="toc-mobile-wrapper">
+              <TableOfContents headings={headings} isMobile={true} />
+            </div>
+          )}
           <slot />
         </div>
       </article>
+      {headings.length > 0 && (
+        <aside class="post-sidebar">
+          <TableOfContents headings={headings} />
+        </aside>
+      )}
     </main>
     <Footer />
   </body>

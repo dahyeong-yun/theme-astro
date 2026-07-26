@@ -1,0 +1,222 @@
+---
+interface Props {
+  headings: { depth: number; slug: string; text: string }[];
+  isMobile?: boolean;
+}
+
+const { headings, isMobile = false } = Astro.props;
+// h2, h3 헤딩만 목차에 사용
+const tocHeadings = headings.filter((h) => h.depth > 1 && h.depth < 4);
+
+if (tocHeadings.length === 0) return null;
+---
+
+<nav class={`toc-container ${isMobile ? 'toc-mobile' : 'toc-desktop'}`}>
+  {isMobile ? (
+    <details class="toc-details">
+      <summary class="toc-summary">
+        <span class="toc-title">목차 보기</span>
+        <svg class="toc-arrow" viewBox="0 0 24 24" width="16" height="16">
+          <path fill="currentColor" d="M7 10l5 5 5-5H7z"/>
+        </svg>
+      </summary>
+      <ul class="toc-list">
+        {tocHeadings.map((h) => (
+          <li class={`toc-item depth-${h.depth}`}>
+            <a href={`#${h.slug}`} class="toc-link">{h.text}</a>
+          </li>
+        ))}
+      </ul>
+    </details>
+  ) : (
+    <>
+      <p class="toc-title">목차</p>
+      <ul class="toc-list">
+        {tocHeadings.map((h) => (
+          <li class={`toc-item depth-${h.depth}`}>
+            <a href={`#${h.slug}`} class="toc-link" data-toc-link>{h.text}</a>
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
+</nav>
+
+<style>
+  .toc-container {
+    font-family: var(--font-sans);
+  }
+  
+  /* 데스크톱 스타일 */
+  .toc-desktop {
+    position: sticky;
+    top: 6rem;
+    max-height: calc(100vh - 10rem);
+    overflow-y: auto;
+    padding-left: 1.5rem;
+    border-left: 1px solid var(--color-border);
+  }
+  .toc-desktop .toc-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.75rem;
+  }
+  
+  /* 모바일 스타일 */
+  .toc-mobile {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    padding: 0.75rem 1rem;
+  }
+  .toc-details {
+    width: 100%;
+  }
+  .toc-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    list-style: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--color-text-primary);
+  }
+  .toc-summary::-webkit-details-marker {
+    display: none;
+  }
+  .toc-arrow {
+    transition: transform 0.2s ease;
+    color: var(--color-text-secondary);
+  }
+  .toc-details[open] .toc-arrow {
+    transform: rotate(180deg);
+  }
+  .toc-mobile .toc-list {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* 공통 목록 스타일 */
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .toc-item {
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+  }
+  .depth-3 {
+    padding-left: 1rem;
+  }
+  .toc-link {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    transition: color 0.15s;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .toc-link:hover {
+    color: var(--color-text-primary);
+  }
+  
+  /* 활성화 항목 (데스크톱 전용 하이라이트) */
+  .toc-desktop .toc-link.active {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+</style>
+
+<!-- 데스크톱 TOC용 스크롤 하이라이팅 스크립트 -->
+<script>
+  function setupScrollSpy() {
+    const tocLinks = document.querySelectorAll('.toc-desktop [data-toc-link]');
+    const headings = Array.from(document.querySelectorAll('article h2, article h3'));
+    
+    if (tocLinks.length === 0 || headings.length === 0) return;
+    
+    const activeClass = 'active';
+    let currentActiveLink: Element | null = null;
+    
+    const observerOptions = {
+      root: null,
+      rootMargin: '-80px 0px -80% 0px', // 화면 상단 헤더 아래 영역에서 감지
+      threshold: 0
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      // 화면 뷰포트에 진입한 헤딩들을 필터링
+      const visibleHeadings = entries.filter(entry => entry.isIntersecting);
+      
+      if (visibleHeadings.length > 0) {
+        // 가장 상단에 있는 요소를 활성화
+        const topHeading = visibleHeadings.reduce((acc, curr) => 
+          curr.boundingClientRect.top < acc.boundingClientRect.top ? curr : acc
+        );
+        activateLink(topHeading.target.id);
+      } else {
+        // 화면에 감지되는 헤딩이 없고 스크롤이 위쪽일 때는 첫번째 헤딩 활성화 또는 이전 활성화 유지
+        const scrollY = window.scrollY;
+        if (scrollY < 100) {
+          activateLink(headings[0].id);
+        } else {
+          // 현재 뷰포트 기준 위쪽에 있는 마지막 헤딩 찾기
+          const topHeadings = headings.filter(h => h.getBoundingClientRect().top < 100);
+          if (topHeadings.length > 0) {
+            activateLink(topHeadings[topHeadings.length - 1].id);
+          }
+        }
+      }
+    }, observerOptions);
+    
+    headings.forEach((heading) => {
+      // 헤딩에 ID가 없는 경우 slug 생성하여 부여
+      if (!heading.id) {
+        heading.id = heading.textContent?.trim().toLowerCase().replace(/\s+/g, '-') || '';
+      }
+      observer.observe(heading);
+    });
+    
+    function activateLink(id: string) {
+      if (!id) return;
+      
+      const targetLink = document.querySelector(`.toc-desktop a[href="#${id}"]`);
+      if (targetLink && targetLink !== currentActiveLink) {
+        if (currentActiveLink) {
+          currentActiveLink.classList.remove(activeClass);
+        }
+        targetLink.classList.add(activeClass);
+        currentActiveLink = targetLink;
+        
+        // active 링크가 가려지지 않도록 목차 컨테이너 스크롤 조정
+        const container = document.querySelector('.toc-desktop');
+        if (container) {
+          const linkRect = targetLink.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+          if (linkRect.bottom > containerRect.bottom) {
+            container.scrollTop += (linkRect.bottom - containerRect.bottom) + 20;
+          } else if (linkRect.top < containerRect.top) {
+            container.scrollTop -= (containerRect.top - linkRect.top) + 20;
+          }
+        }
+      }
+    }
+  }
+
+  // Astro Page Transitions (Swap) 대응 및 초기 로드 실행
+  document.addEventListener('astro:page-load', setupScrollSpy);
+  // 초기 로딩 (View transitions를 안 쓰는 페이지도 지원)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupScrollSpy);
+  } else {
+    setupScrollSpy();
+  }
+</script>
