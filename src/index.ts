@@ -49,8 +49,14 @@ export function blogTheme(config: BlogConfig): AstroIntegration {
               rehypePlugins: [rehypeKatex],
             }),
             sitemap(),
-            ...(config.analytics?.gtm?.id
-              ? [partytown({ config: { forward: ['dataLayer.push'] } })]
+            ...((config.analytics?.gtm?.id || config.analytics?.ga?.id)
+              ? [
+                  partytown({
+                    config: {
+                      forward: ['dataLayer.push', 'gtag'],
+                    },
+                  }),
+                ]
               : []),
           ],
           markdown: {

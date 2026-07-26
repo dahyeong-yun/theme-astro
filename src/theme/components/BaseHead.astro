@@ -14,8 +14,10 @@ const { title, description, image } = Astro.props
 const ogImage = image ? new URL(image.src, Astro.url) : new URL('/og-default.jpg', Astro.site)
 
 const gtmId = config.analytics?.gtm?.id
+const gaId = config.analytics?.ga?.id
 const isDev = import.meta.env.DEV
 const shouldLoadGtm = gtmId && (config.analytics?.gtm?.includeInDevelopment || !isDev)
+const shouldLoadGa = gaId && (config.analytics?.ga?.includeInDevelopment || !isDev)
 ---
 
 <!-- Global Metadata -->
@@ -72,4 +74,17 @@ const shouldLoadGtm = gtmId && (config.analytics?.gtm?.includeInDevelopment || !
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer', gtmId);
   </script>
+)}
+
+<!-- Google Analytics (GA4) -->
+{shouldLoadGa && (
+  <>
+    <script type="text/partytown" src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
+    <script type="text/partytown" define:vars={{ gaId }}>
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function gtag(){window.dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', gaId);
+    </script>
+  </>
 )}

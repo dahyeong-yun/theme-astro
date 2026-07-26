@@ -22,8 +22,14 @@ export interface GtmConfig {
   includeInDevelopment?: boolean
 }
 
+export interface GaConfig {
+  id: string
+  includeInDevelopment?: boolean
+}
+
 export interface AnalyticsConfig {
   gtm?: GtmConfig
+  ga?: GaConfig
 }
 
 export interface SeoConfig {
