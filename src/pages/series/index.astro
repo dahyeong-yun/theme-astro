@@ -1,0 +1,172 @@
+---
+import { getCollection } from 'astro:content';
+import config from 'virtual:blog-config';
+import Header from '../../theme/components/Header.astro';
+import Footer from '../../theme/components/Footer.astro';
+import BaseHead from '../../theme/components/BaseHead.astro';
+
+const posts = await getCollection('posts');
+const seriesPosts = posts.filter((p) => !p.data.draft && p.data.series);
+
+// 시리즈별 그룹화
+const seriesMap = new Map<string, { posts: typeof seriesPosts; lastUpdated: Date }>();
+
+seriesPosts.forEach((post) => {
+  const seriesName = post.data.series!;
+  const current = seriesMap.get(seriesName);
+  if (!current) {
+    seriesMap.set(seriesName, {
+      posts: [post],
+      lastUpdated: post.data.date,
+    });
+  } else {
+    current.posts.push(post);
+    if (post.data.date > current.lastUpdated) {
+      current.lastUpdated = post.data.date;
+    }
+  }
+});
+
+// 순서 정렬 및 시리즈 목록 변환
+const seriesList = Array.from(seriesMap.entries()).map(([name, data]) => {
+  // 포스트 내부 정렬
+  data.posts.sort((a, b) => (a.data.seriesOrder ?? 999) - (b.data.seriesOrder ?? 999));
+
+  // 슬러그 생성 (공백 -> 하이픈, 소문자화, 특수문자 제거)
+  const slug = name
+    .toLowerCase()
+    .replace(/[^\w\sㄱ-힣-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+
+  return {
+    name,
+    slug,
+    postCount: data.posts.length,
+    lastUpdated: data.lastUpdated,
+    posts: data.posts,
+  };
+}).sort((a, b) => b.lastUpdated.valueOf() - a.lastUpdated.valueOf());
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+---
+
+<!doctype html>
+<html lang={config.site.language}>
+  <head>
+    <BaseHead title={`Series | ${config.site.title}`} description="연재물 시리즈 목록" />
+    <style>
+      main {
+        width: 860px;
+        max-width: calc(100% - 2em);
+        margin: 2rem auto;
+        padding: 0 1em;
+        font-family: var(--font-sans);
+      }
+      h1.page-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        color: var(--color-text-secondary);
+        letter-spacing: -0.01em;
+      }
+      .series-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      @media (min-width: 640px) {
+        .series-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .series-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+      .series-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--color-accent);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      }
+      .series-card-header {
+        margin-bottom: 1rem;
+      }
+      .series-badge {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--color-accent);
+        background: rgba(88, 166, 255, 0.1);
+        padding: 0.1rem 0.4rem;
+        border-radius: 4px;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+      }
+      .series-card-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        margin: 0;
+        line-height: 1.3;
+      }
+      .series-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+        color: var(--color-text-secondary);
+        border-top: 1px solid var(--color-border);
+        padding-top: 0.75rem;
+        margin-top: 1rem;
+      }
+      .post-count {
+        font-weight: 600;
+      }
+      .no-series {
+        text-align: center;
+        padding: 4rem 0;
+        color: var(--color-text-secondary);
+      }
+    </style>
+  </head>
+  <body>
+    <Header />
+    <main>
+      <h1 class="page-title">Series</h1>
+      {seriesList.length > 0 ? (
+        <div class="series-grid">
+          {seriesList.map((series) => (
+            <a href={`/series/${series.slug}/`} class="series-card">
+              <div class="series-card-header">
+                <span class="series-badge">SERIES</span>
+                <h2 class="series-card-title">{series.name}</h2>
+              </div>
+              <div class="series-card-footer">
+                <span class="post-count">{series.postCount}개의 글</span>
+                <span class="last-updated">최근 업데이트: {formatDate(series.lastUpdated)}</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div class="no-series">
+          <p>등록된 시리즈가 없습니다.</p>
+        </div>
+      )}
+    </main>
+    <Footer />
+  </body>
+</html>

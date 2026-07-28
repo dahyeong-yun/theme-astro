@@ -1,0 +1,304 @@
+---
+import { getCollection } from 'astro:content';
+
+interface Props {
+  currentSeries: string;
+  currentPostId: string;
+}
+
+const { currentSeries, currentPostId } = Astro.props;
+
+// 동일한 시리즈의 포스트 중, draft가 아니며, 동일한 series명을 가진 포스트를 가져옵니다.
+const allPosts = await getCollection('posts');
+const seriesPosts = allPosts
+  .filter((p) => !p.data.draft && p.data.series === currentSeries)
+  .sort((a, b) => (a.data.seriesOrder ?? 999) - (b.data.seriesOrder ?? 999));
+
+if (seriesPosts.length === 0) return null;
+
+// 현재 포스트의 인덱스 찾기
+const currentIndex = seriesPosts.findIndex((p) => p.id === currentPostId);
+const prevPost = currentIndex > 0 ? seriesPosts[currentIndex - 1] : null;
+const nextPost = currentIndex < seriesPosts.length - 1 ? seriesPosts[currentIndex + 1] : null;
+
+// 슬러그 추출 함수
+function getPostSlug(post: any) {
+  let slug = post.data.slug;
+  if (slug) {
+    return slug.replace(/^\/|\/$/g, '');
+  }
+  return post.id.replace(/\/index$/, '').replace(/^\/|\/$/g, '');
+}
+---
+
+<div class="series-container">
+  <div class="series-header">
+    <div class="series-title-area">
+      <svg class="series-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <span class="series-label">SERIES</span>
+      <h3 class="series-title">{currentSeries}</h3>
+    </div>
+    <span class="series-count">
+      {currentIndex !== -1 ? `${currentIndex + 1} / ${seriesPosts.length}` : `${seriesPosts.length}개의 포스트`}
+    </span>
+  </div>
+
+  <div class="series-body">
+    <ul class="series-list">
+      {seriesPosts.map((post, idx) => {
+        const isCurrent = post.id === currentPostId;
+        const postSlug = getPostSlug(post);
+        return (
+          <li class={`series-item ${isCurrent ? 'active' : ''}`}>
+            <span class="series-item-number">{String(idx + 1).padStart(2, '0')}</span>
+            {isCurrent ? (
+              <span class="series-item-title current">
+                <span class="item-text">{post.data.title}</span>
+                <span class="current-badge">지금 읽는 중</span>
+              </span>
+            ) : (
+              <a href={`/blog/${postSlug}/`} class="series-item-title-link">
+                {post.data.title}
+              </a>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+
+  {(prevPost || nextPost) && (
+    <div class="series-footer-nav">
+      {prevPost ? (
+        <a href={`/blog/${getPostSlug(prevPost)}/`} class="nav-btn prev">
+          <span class="nav-dir">이전 포스트</span>
+          <span class="nav-title">{prevPost.data.title}</span>
+        </a>
+      ) : (
+        <div class="nav-btn disabled prev">
+          <span class="nav-dir">이전 포스트</span>
+          <span class="nav-title">첫 번째 글입니다</span>
+        </div>
+      )}
+      {nextPost ? (
+        <a href={`/blog/${getPostSlug(nextPost)}/`} class="nav-btn next">
+          <span class="nav-dir">다음 포스트</span>
+          <span class="nav-title">{nextPost.data.title}</span>
+        </a>
+      ) : (
+        <div class="nav-btn disabled next">
+          <span class="nav-dir">다음 포스트</span>
+          <span class="nav-title">마지막 글입니다</span>
+        </div>
+      )}
+    </div>
+  )}
+</div>
+
+<style>
+  .series-container {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    margin: 2.5rem 0;
+    overflow: hidden;
+    font-family: var(--font-sans);
+  }
+
+  .series-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .series-title-area {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .series-icon {
+    color: var(--color-accent);
+    flex-shrink: 0;
+  }
+
+  .series-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--color-accent);
+    letter-spacing: 0.1em;
+    background: rgba(88, 166, 255, 0.1);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .series-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .series-count {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    flex-shrink: 0;
+  }
+
+  .series-body {
+    padding: 1rem 1.25rem;
+  }
+
+  .series-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .series-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: background 0.15s ease;
+  }
+
+  .series-item:not(.active):hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .series-item-number {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    width: 1.5rem;
+  }
+
+  .series-item-title-link {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color 0.15s ease;
+    width: 100%;
+  }
+
+  .series-item-title-link:hover {
+    color: var(--color-accent);
+  }
+
+  .series-item.active {
+    background: rgba(88, 166, 255, 0.08);
+    border: 1px solid rgba(88, 166, 255, 0.2);
+  }
+
+  .series-item-title.current {
+    font-weight: 700;
+    color: var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .item-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .current-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: var(--color-accent);
+    color: var(--color-bg);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  /* Footer Navigation */
+  .series-footer-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .series-footer-nav .nav-btn {
+    display: flex;
+    flex-direction: column;
+    padding: 0.85rem 1.25rem;
+    text-decoration: none;
+    transition: background 0.15s ease;
+    min-width: 0;
+  }
+
+  .series-footer-nav .nav-btn.prev {
+    border-right: 1px solid var(--color-border);
+  }
+
+  .series-footer-nav .nav-btn:not(.disabled):hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .series-footer-nav .nav-dir {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    letter-spacing: 0.05em;
+    margin-bottom: 0.2rem;
+  }
+
+  .series-footer-nav .nav-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .series-footer-nav .nav-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  
+  .series-footer-nav .nav-btn.disabled .nav-title {
+    color: var(--color-text-secondary);
+  }
+
+  @media (max-width: 640px) {
+    .series-footer-nav {
+      grid-template-columns: 1fr;
+    }
+    .series-footer-nav .nav-btn.prev {
+      border-right: none;
+      border-bottom: 1px solid var(--color-border);
+    }
+  }
+</style>

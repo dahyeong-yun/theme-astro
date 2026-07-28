@@ -16,6 +16,8 @@ const posts = defineCollection({
       draft: z.boolean().default(false),
       // Gatsby 호환 필드 (선택)
       slug: z.string().optional(),
+      series: z.string().optional(),
+      seriesOrder: z.number().int().positive().optional(),
     }),
 })
 

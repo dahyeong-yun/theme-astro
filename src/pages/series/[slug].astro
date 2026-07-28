@@ -1,0 +1,226 @@
+---
+import { getCollection } from 'astro:content';
+import config from 'virtual:blog-config';
+import Header from '../../theme/components/Header.astro';
+import Footer from '../../theme/components/Footer.astro';
+import BaseHead from '../../theme/components/BaseHead.astro';
+import FormattedDate from '../../theme/components/FormattedDate.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  const seriesPosts = posts.filter((p) => !p.data.draft && p.data.series);
+
+  // 시리즈별 그룹화
+  const seriesMap = new Map<string, typeof posts>();
+
+  seriesPosts.forEach((post) => {
+    const seriesName = post.data.series!;
+    const current = seriesMap.get(seriesName);
+    if (!current) {
+      seriesMap.set(seriesName, [post]);
+    } else {
+      current.push(post);
+    }
+  });
+
+  return Array.from(seriesMap.entries()).map(([name, items]) => {
+    // 슬러그 생성 (공백 -> 하이픈, 소문자화, 특수문자 제거)
+    const slug = name
+      .toLowerCase()
+      .replace(/[^\w\sㄱ-힣-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+
+    // 포스트 순서 정렬
+    items.sort((a, b) => (a.data.seriesOrder ?? 999) - (b.data.seriesOrder ?? 999));
+
+    return {
+      params: { slug },
+      props: {
+        seriesName: name,
+        posts: items,
+      },
+    };
+  });
+}
+
+const { seriesName, posts } = Astro.props;
+
+// 포스트 링크용 슬러그 추출 함수
+function getPostSlug(post: any) {
+  let slug = post.data.slug;
+  if (slug) {
+    return slug.replace(/^\/|\/$/g, '');
+  }
+  return post.id.replace(/\/index$/, '').replace(/^\/|\/$/g, '');
+}
+---
+
+<!doctype html>
+<html lang={config.site.language}>
+  <head>
+    <BaseHead title={`${seriesName} | Series`} description={`${seriesName} 시리즈의 연재 포스트 목록`} />
+    <style>
+      main {
+        width: 860px;
+        max-width: calc(100% - 2em);
+        margin: 2rem auto;
+        padding: 0 1em;
+        font-family: var(--font-sans);
+      }
+      .series-header-info {
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--color-border);
+      }
+      .series-badge {
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--color-accent);
+        background: rgba(88, 166, 255, 0.1);
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        display: inline-block;
+        margin-bottom: 0.75rem;
+        letter-spacing: 0.05em;
+      }
+      h1.series-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin: 0 0 0.5rem 0;
+        color: var(--color-text-primary);
+        line-height: 1.25;
+      }
+      .series-meta {
+        font-size: 0.875rem;
+        color: var(--color-text-secondary);
+      }
+      
+      /* 포스트 리스트 스타일 */
+      .post-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .post-item {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        transition: border-color 0.15s ease, transform 0.15s ease;
+      }
+      .post-item:hover {
+        border-color: var(--color-accent);
+        transform: translateX(4px);
+      }
+      .post-link {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        padding: 1rem 1.25rem;
+        text-decoration: none;
+        color: var(--color-text-primary);
+      }
+      .post-index {
+        font-family: var(--font-mono);
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--color-text-secondary);
+        width: 2rem;
+        text-align: right;
+        flex-shrink: 0;
+      }
+      .post-details {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        flex-grow: 1;
+      }
+      .post-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--color-text-primary);
+      }
+      .post-item:hover .post-title {
+        color: var(--color-accent);
+      }
+      .post-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.8rem;
+        color: var(--color-text-secondary);
+      }
+      .post-desc {
+        font-size: 0.875rem;
+        color: var(--color-text-secondary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-top: 0.25rem;
+      }
+      
+      .back-to-list {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--color-text-secondary);
+        margin-bottom: 2rem;
+        text-decoration: none;
+        transition: color 0.15s ease;
+      }
+      .back-to-list:hover {
+        color: var(--color-accent);
+      }
+    </style>
+  </head>
+  <body>
+    <Header />
+    <main>
+      <a href="/series" class="back-to-list">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        전체 시리즈 목록으로 돌아가기
+      </a>
+      
+      <div class="series-header-info">
+        <span class="series-badge">SERIES</span>
+        <h1 class="series-title">{seriesName}</h1>
+        <div class="series-meta">
+          <span>총 {posts.length}개의 포스트</span>
+        </div>
+      </div>
+
+      <ul class="post-list">
+        {posts.map((post, index) => {
+          const postSlug = getPostSlug(post);
+          return (
+            <li class="post-item">
+              <a href={`/blog/${postSlug}/`} class="post-link">
+                <span class="post-index">{String(index + 1).padStart(2, '0')}</span>
+                <div class="post-details">
+                  <h2 class="post-title">{post.data.title}</h2>
+                  {post.data.description && <p class="post-desc">{post.data.description}</p>}
+                  <div class="post-meta">
+                    <FormattedDate date={post.data.date} />
+                  </div>
+                </div>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </main>
+    <Footer />
+  </body>
+</html>

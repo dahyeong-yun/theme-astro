@@ -35,6 +35,14 @@ export function blogTheme(config: BlogConfig): AstroIntegration {
           pattern: '/rss.xml',
           entrypoint: 'theme-astro/src/pages/rss.xml.js',
         })
+        injectRoute({
+          pattern: '/series',
+          entrypoint: 'theme-astro/src/pages/series/index.astro',
+        })
+        injectRoute({
+          pattern: '/series/[slug]',
+          entrypoint: 'theme-astro/src/pages/series/[slug].astro',
+        })
 
         // blog.config를 virtual:blog-config 가상 모듈로 주입
         // → 테마 컴포넌트들이 경로에 무관하게 설정을 읽을 수 있음

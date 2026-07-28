@@ -9,6 +9,8 @@ export const blogPostSchema = z.object({
   banner: z.string().optional(),  // public/ 경로 또는 URL
   draft: z.boolean().default(false),
   slug: z.string().optional(),
+  series: z.string().optional(),
+  seriesOrder: z.number().int().positive().optional(),
 })
 
 export type BlogPost = z.infer<typeof blogPostSchema>

@@ -7,12 +7,14 @@ import Footer from '../components/Footer.astro'
 import FormattedDate from '../components/FormattedDate.astro'
 import Header from '../components/Header.astro'
 import TableOfContents from '../components/TableOfContents.astro'
+import SeriesBox from '../components/SeriesBox.astro'
 
 type Props = CollectionEntry<'posts'>['data'] & {
   headings?: { depth: number; slug: string; text: string }[];
+  id?: string;
 }
 
-const { title, description, date, banner, headings = [] } = Astro.props
+const { title, description, date, banner, headings = [], series, id } = Astro.props
 ---
 
 <html lang={config.site.language}>
@@ -107,6 +109,9 @@ const { title, description, date, banner, headings = [] } = Astro.props
             <div class="date"><FormattedDate date={date} /></div>
             <h1>{title}</h1>
           </div>
+          {series && id && (
+            <SeriesBox currentSeries={series} currentPostId={id} />
+          )}
           {headings.length > 0 && (
             <div class="toc-mobile-wrapper">
               <TableOfContents headings={headings} isMobile={true} />
