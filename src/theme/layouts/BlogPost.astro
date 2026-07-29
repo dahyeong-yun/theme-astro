@@ -12,9 +12,10 @@ import SeriesBox from '../components/SeriesBox.astro'
 type Props = CollectionEntry<'posts'>['data'] & {
   headings?: { depth: number; slug: string; text: string }[];
   id?: string;
+  lastModified?: string;
 }
 
-const { title, description, date, banner, headings = [], series, id } = Astro.props
+const { title, description, date, banner, headings = [], series, id, lastModified } = Astro.props
 ---
 
 <html lang={config.site.language}>
@@ -68,6 +69,9 @@ const { title, description, date, banner, headings = [], series, id } = Astro.pr
         font-size: 0.875rem;
         color: var(--color-text-secondary);
       }
+      .last-modified {
+        font-style: italic;
+      }
 
       /* 모바일용 TOC 래퍼 기본 스타일 */
       .toc-mobile-wrapper {
@@ -106,7 +110,14 @@ const { title, description, date, banner, headings = [], series, id } = Astro.pr
         )}
         <div class="prose">
           <div class="title">
-            <div class="date"><FormattedDate date={date} /></div>
+            <div class="date">
+              <span>Posted on <FormattedDate date={date} /></span>
+              {lastModified && new Date(lastModified).toDateString() !== date.toDateString() && (
+                <span class="last-modified">
+                  {" • "}Updated on <FormattedDate date={new Date(lastModified)} />
+                </span>
+              )}
+            </div>
             <h1>{title}</h1>
           </div>
           {series && id && (

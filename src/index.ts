@@ -6,8 +6,26 @@ import _rehypeKatex from 'rehype-katex'
 import type { AstroIntegration } from 'astro'
 import type { BlogConfig } from './theme/types.js'
 
+import { execSync } from 'child_process'
+
 const remarkMath = (_remarkMath as any).default || _remarkMath
 const rehypeKatex = (_rehypeKatex as any).default || _rehypeKatex
+
+function remarkModifiedTime() {
+  return function (tree: any, file: any) {
+    const filepath = file.history[0]
+    if (!filepath) return
+    try {
+      const result = execSync(`git log -1 --pretty=format:%aI -- "${filepath}"`)
+      const dateStr = result.toString().trim()
+      if (dateStr) {
+        file.data.astro.frontmatter.lastModified = dateStr
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+}
 
 export function blogTheme(config: BlogConfig): AstroIntegration {
   return {
@@ -53,7 +71,7 @@ export function blogTheme(config: BlogConfig): AstroIntegration {
           output: 'static',
           integrations: [
             mdx({
-              remarkPlugins: [remarkMath],
+              remarkPlugins: [remarkMath, remarkModifiedTime],
               rehypePlugins: [rehypeKatex],
             }),
             sitemap(),
@@ -68,7 +86,7 @@ export function blogTheme(config: BlogConfig): AstroIntegration {
               : []),
           ],
           markdown: {
-            remarkPlugins: [remarkMath],
+            remarkPlugins: [remarkMath, remarkModifiedTime],
             rehypePlugins: [rehypeKatex],
             shikiConfig: {
               theme: config.theme?.codeTheme ?? 'tokyo-night',
