@@ -90,7 +90,7 @@ export function blogTheme(config: BlogConfig): AstroIntegration {
             rehypePlugins: [rehypeKatex],
             shikiConfig: {
               theme: config.theme?.codeTheme ?? 'tokyo-night',
-              wrap: false,
+              wrap: true,
             },
           },
           vite: {

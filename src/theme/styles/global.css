@@ -148,10 +148,124 @@ pre {
   border: 1px solid var(--color-border);
   box-shadow: var(--box-shadow);
   margin: 1.5rem 0;
+  position: relative; /* 자식 요소 절대 위치(absolute) 배치 기준점 설정 */
+
+  /* 줄바꿈(Wrap) 및 강제 스크롤 비활성화 */
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+
+  /* 라인 번호용 카운터 초기화 */
+  counter-reset: line;
 }
+
 pre > code {
-  all: unset;
+  display: block;
   font-family: var(--font-mono);
+}
+
+/* 각 줄에 대한 스타일 설정 */
+pre code .line {
+  display: block;
+  position: relative;
+  padding-left: 2.75rem; /* 라인 번호 영역 확보 */
+  min-height: 1.5rem;
+}
+
+/* 라인 번호 표시 */
+pre code .line::before {
+  counter-increment: line;
+  content: counter(line);
+  position: absolute;
+  left: 0;
+  width: 1.75rem;
+  text-align: right;
+  color: var(--color-text-secondary);
+  opacity: 0.4;
+  user-select: none;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+}
+
+/* 언어 표시 헤더 바 (data-language 어트리뷰트가 있을 때 적용) */
+pre[data-language] {
+  position: relative;
+  padding-top: 3rem; /* 헤더 바 공간 확보 */
+}
+
+/* 헤더 바 배경 및 언어 이름 표시 */
+pre[data-language]::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2.25rem;
+  line-height: 2.25rem;
+  padding: 0 4rem; /* 양옆 여백을 넓혀 버튼들과 겹침 방지 */
+  background: rgba(255, 255, 255, 0.03); /* 은은한 헤더 배경 */
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.75rem;
+  font-family: var(--font-sans);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  text-align: center; /* 가로 가운데 정렬 */
+  border-top-left-radius: calc(var(--code-radius) - 1px);
+  border-top-right-radius: calc(var(--code-radius) - 1px);
+  pointer-events: none; /* 클릭 이벤트 통과 설정 */
+}
+
+/* Mac 스타일 윈도우 컨트롤 버튼 (빨강, 노랑, 초록 점) */
+pre[data-language]::after {
+  content: '';
+  position: absolute;
+  top: 0.75rem;
+  left: 1.25rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: #ff5f56;
+  box-shadow: 1.25rem 0 0 #ffbd2e, 2.5rem 0 0 #27c93f;
+}
+
+/* 복사 버튼 스타일 */
+.copy-code-button {
+  position: absolute;
+  top: 0.325rem;
+  right: 0.75rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  padding: 0;
+}
+
+.copy-code-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.copy-code-button.copied {
+  color: #27c93f; /* 완료 시 녹색 활성화 */
+  background: rgba(39, 201, 63, 0.1);
+  border-color: rgba(39, 201, 63, 0.2);
+}
+
+.copy-code-button svg {
+  width: 0.9rem;
+  height: 0.9rem;
 }
 
 /* ============================================================
