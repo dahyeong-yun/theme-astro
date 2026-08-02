@@ -62,11 +62,15 @@ function getPostSlug(post: any) {
     <BaseHead title={`${seriesName} | Series`} description={`${seriesName} 시리즈의 연재 포스트 목록`} />
     <style>
       main {
-        width: 860px;
-        max-width: calc(100% - 2em);
-        margin: 2rem auto;
-        padding: 0 1em;
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
         font-family: var(--font-sans);
+      }
+      @media (max-width: 640px) {
+        main {
+          padding: 1.5rem 1rem;
+        }
       }
       .series-header-info {
         margin-bottom: 2.5rem;

@@ -37,7 +37,7 @@ import HeaderLink from './HeaderLink.astro'
 <style>
   header {
     margin: 0;
-    padding: 0 1.5em;
+    padding: 0 1.5rem;
     background: var(--color-bg-header);
     box-shadow: 0 1px 0 var(--color-border-hairline);
     position: sticky;
@@ -45,6 +45,11 @@ import HeaderLink from './HeaderLink.astro'
     z-index: 100;
     backdrop-filter: blur(24px) saturate(1.5);
     transition: background-color 0.3s var(--transition-timing), box-shadow 0.3s var(--transition-timing);
+  }
+  @media (max-width: 640px) {
+    header {
+      padding: 0 1rem;
+    }
   }
   nav {
     display: flex;

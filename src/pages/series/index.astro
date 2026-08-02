@@ -63,11 +63,15 @@ function formatDate(date: Date) {
     <BaseHead title={`Series | ${config.site.title}`} description="연재물 시리즈 목록" />
     <style>
       main {
-        width: 860px;
-        max-width: calc(100% - 2em);
-        margin: 2rem auto;
-        padding: 0 1em;
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
         font-family: var(--font-sans);
+      }
+      @media (max-width: 640px) {
+        main {
+          padding: 1.5rem 1rem;
+        }
       }
       h1.page-title {
         font-size: 1.4rem;

@@ -18,10 +18,14 @@ const posts = (await getCollection('posts'))
     <BaseHead title={config.site.title} description={config.site.description} />
     <style>
       main {
-        width: 860px;
-        max-width: calc(100% - 2em);
-        margin: 2rem auto;
-        padding: 0 1em;
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+      }
+      @media (max-width: 640px) {
+        main {
+          padding: 1.5rem 1rem;
+        }
       }
       h1.page-title {
         font-size: 1.4rem;

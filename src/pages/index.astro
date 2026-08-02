@@ -12,8 +12,13 @@ import BaseHead from '../theme/components/BaseHead.astro'
     <style>
       main {
         max-width: 860px;
-        margin: 4rem auto;
-        padding: 0 1.5rem;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+      }
+      @media (max-width: 640px) {
+        main {
+          padding: 1.5rem 1rem;
+        }
       }
       h1 {
         font-size: 2.5rem;

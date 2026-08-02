@@ -27,8 +27,13 @@ const { title, description, date, banner, headings = [], series, id, lastModifie
         justify-content: center;
         max-width: 1120px;
         margin: 0 auto;
-        padding: 2em 1.5rem;
+        padding: 2rem 1.5rem;
         gap: 3rem;
+      }
+      @media (max-width: 640px) {
+        .post-layout {
+          padding: 1.5rem 1rem;
+        }
       }
       .post-content {
         width: 720px;
