@@ -107,7 +107,6 @@ html {
   background-color: var(--color-bg);
   /* 부드러운 테마 전환 효과 */
   transition: background-color var(--transition-speed) var(--transition-timing);
-  scrollbar-gutter: stable; /* 스크롤바 유무에 따른 흔들림 원천 방지 */
 }
 
 body {
