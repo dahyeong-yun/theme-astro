@@ -43,6 +43,19 @@ const shouldLoadGa = gaId && (config.analytics?.ga?.includeInDevelopment || !isD
 <meta name="author" content={config.site.author} />
 <html lang={config.site.language} />
 
+<script is:inline>
+  (function() {
+    const getTheme = () => {
+      if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+        return localStorage.getItem('theme');
+      }
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    };
+    const theme = getTheme();
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
+
 <!-- Open Graph -->
 {config.seo?.openGraph && (
   <>
