@@ -15,7 +15,8 @@
   --color-border:           rgb(224, 224, 224); /* #e0e0e0 */
   --color-border-hairline:  rgb(213, 213, 218); /* #d5d5da */
   --color-text-primary:     rgb(29, 29, 31);    /* #1d1d1f */
-  --color-text-secondary:   rgb(122, 122, 122);  /* #7a7a7a */
+  --color-text-body:        rgb(51, 51, 51);     /* #333333 (더 선명하고 가독성 좋은 본문 색상) */
+  --color-text-secondary:   rgb(122, 122, 122);  /* #7a7a7a (보조 메타 데이터용) */
   --color-accent:           rgb(0, 102, 204);   /* #0066cc */
   --color-accent-hover:     rgb(0, 81, 163);    /* #0051a3 */
   
@@ -50,7 +51,8 @@
   --color-border:           rgb(56, 56, 58);    /* #38383a */
   --color-border-hairline:  rgb(48, 48, 50);    /* #303032 */
   --color-text-primary:     rgb(245, 245, 247);  /* #f5f5f7 */
-  --color-text-secondary:   rgb(142, 142, 147); /* #8e8e93 */
+  --color-text-body:        rgb(213, 213, 218);  /* #d5d5da (더 선명하고 밝은 다크모드 본문 색상) */
+  --color-text-secondary:   rgb(142, 142, 147); /* #8e8e93 (보조 메타 데이터용) */
   --color-accent:           rgb(10, 132, 255);  /* #0a84ff */
   --color-accent-hover:     rgb(64, 156, 255);  /* #409cff */
   
@@ -76,6 +78,7 @@
     --color-border:           rgb(56, 56, 58);
     --color-border-hairline:  rgb(48, 48, 50);
     --color-text-primary:     rgb(245, 245, 247);
+    --color-text-body:        rgb(213, 213, 218);
     --color-text-secondary:   rgb(142, 142, 147);
     --color-accent:           rgb(10, 132, 255);
     --color-accent-hover:     rgb(64, 156, 255);
@@ -160,7 +163,7 @@ p {
   font-weight: 400;
   line-height: 27.2px;
   letter-spacing: -0.2px;
-  color: var(--color-text-secondary);
+  color: var(--color-text-body);
   margin: 0 0 1.25em;
   transition: color var(--transition-speed) var(--transition-timing);
 }
@@ -175,7 +178,7 @@ li {
   font-weight: 400;
   line-height: 27.2px;
   letter-spacing: -0.2px;
-  color: var(--color-text-secondary);
+  color: var(--color-text-body);
   margin-bottom: 0.5rem;
   transition: color var(--transition-speed) var(--transition-timing);
 }
