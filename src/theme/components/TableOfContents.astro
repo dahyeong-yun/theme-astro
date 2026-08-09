@@ -50,28 +50,29 @@ if (tocHeadings.length === 0) return null;
   /* 데스크톱 스타일 */
   .toc-desktop {
     position: sticky;
-    top: 6rem;
-    max-height: calc(100vh - 10rem);
+    top: 8rem;
+    max-height: calc(100vh - 12rem);
     overflow-y: auto;
     padding-left: 1.5rem;
-    border-left: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-border);
   }
   .toc-desktop .toc-title {
-    font-size: 0.85rem;
-    font-weight: 700;
+    font-size: 0.9rem;
+    font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--color-text-secondary);
-    margin-bottom: 0.75rem;
+    color: var(--color-text-primary);
+    margin-bottom: 1rem;
   }
   
   /* 모바일 스타일 */
   .toc-mobile {
     background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
+    border: 3px solid var(--color-border);
+    box-shadow: 4px 4px 0px var(--color-border);
+    border-radius: 4px;
     margin-bottom: 2rem;
-    padding: 0.75rem 1rem;
+    padding: 1rem;
   }
   .toc-details {
     width: 100%;
@@ -82,16 +83,17 @@ if (tocHeadings.length === 0) return null;
     align-items: center;
     cursor: pointer;
     list-style: none;
-    font-weight: 600;
-    font-size: 0.95rem;
+    font-weight: 900;
+    font-size: 1rem;
     color: var(--color-text-primary);
+    text-transform: uppercase;
   }
   .toc-summary::-webkit-details-marker {
     display: none;
   }
   .toc-arrow {
     transition: transform 0.2s ease;
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
   }
   .toc-details[open] .toc-arrow {
     transform: rotate(180deg);
@@ -99,7 +101,7 @@ if (tocHeadings.length === 0) return null;
   .toc-mobile .toc-list {
     margin-top: 0.75rem;
     padding-top: 0.75rem;
-    border-top: 1px solid var(--color-border);
+    border-top: 3px solid var(--color-border);
   }
 
   /* 공통 목록 스타일 */
@@ -110,15 +112,16 @@ if (tocHeadings.length === 0) return null;
   }
   .toc-item {
     line-height: 1.5;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.6rem;
   }
   .depth-3 {
     padding-left: 1rem;
   }
   .toc-link {
     font-size: 0.875rem;
+    font-weight: 700;
     color: var(--color-text-secondary);
-    transition: color 0.15s;
+    transition: all 0.1s ease;
     display: block;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -126,12 +129,17 @@ if (tocHeadings.length === 0) return null;
   }
   .toc-link:hover {
     color: var(--color-text-primary);
+    transform: translateX(2px);
   }
   
   /* 활성화 항목 (데스크톱 전용 하이라이트) */
   .toc-desktop .toc-link.active {
-    color: var(--color-accent);
-    font-weight: 600;
+    color: var(--color-text-primary);
+    background-color: var(--color-accent);
+    padding: 0.2rem 0.5rem;
+    border: 2px solid var(--color-border);
+    box-shadow: 2px 2px 0px var(--color-border);
+    font-weight: 900;
   }
 </style>
 

@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTRO // 네오 브루탈리즘 블로그 테마</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Noto Sans KR & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@700&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        teal: '#00C2CB',
+                        magenta: '#FF00FF',
+                        yellow: '#FFD700',
+                        paper: '#F5F5DC',
+                        black: '#000000',
+                        white: '#FFFFFF',
+                    },
+                    boxShadow: {
+                        'brutal-sm': '3px 3px 0px #000000',
+                        'brutal': '4px 4px 0px #000000',
+                        'brutal-lg': '8px 8px 0px #000000',
+                        'brutal-xl': '12px 12px 0px #000000',
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #F5F5DC;
+            color: #000000;
+            font-family: 'Noto Sans KR', 'Inter', system-ui, sans-serif;
+        }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #F5F5DC;
+            color: #000000;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        /* Neo-Brutalist Base Button & Card Effects */
+        .brutal-border {
+            border: 3px solid #000000;
+        }
+
+        .brutal-border-sm {
+            border: 2px solid #000000;
+        }
+
+        .brutal-shadow {
+            box-shadow: 4px 4px 0px #000000;
+        }
+
+        .brutal-shadow-lg {
+            box-shadow: 8px 8px 0px #000000;
+        }
+
+        .brutal-shadow-xl {
+            box-shadow: 12px 12px 0px #000000;
+        }
+
+        /* Interactive Element Displacement Effect */
+        .brutal-btn {
+            transition: all 0.1s ease;
+            border: 2px solid #000000;
+            box-shadow: 3px 3px 0px #000000;
+            font-weight: bold;
+        }
+
+        .brutal-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 5px 5px 0px #000000;
+        }
+
+        .brutal-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #000000;
+        }
+
+        /* Marquee Text Animation */
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .animate-marquee {
+            display: flex;
+            width: 200%;
+            animation: marquee 15s linear infinite;
+        }
+
+        /* Focus state visibility rule */
+        *:focus-visible {
+            outline: 3px solid #FF00FF !important;
+            outline-offset: 2px;
+        }
+
+        /* Custom scrollbar for brutalist look */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F5F5DC;
+            border-left: 2px solid #000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #000000;
+            border: 2px solid #F5F5DC;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-magenta selection:text-white">
+
+    <div class="bg-black text-white font-mono text-sm py-2 overflow-hidden border-b-2 border-black">
+        <div class="animate-marquee whitespace-nowrap uppercase font-bold tracking-wider">
+            <span>⚡ ASTRO v4.0 기반 • 네오 브루탈리즘 디자인 시스템 • 노 그라데이션 • 100% 초고속 성능 • 고대비 모드 상시 적용 • ⚡ ASTRO v4.0 기반 • 네오 브루탈리즘 디자인 시스템 • 노 그라데이션 • 100% 초고속 성능 • 고대비 모드 상시 적용 • </span>
+        </div>
+    </div>
+
+    <header class="bg-white border-b-[3px] border-black sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- Logo -->
+            <a href="#" onclick="showListView()" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 bg-yellow border-2 border-black flex items-center justify-center font-black text-xl shadow-brutal transition-transform group-hover:rotate-6">
+                    A
+                </div>
+                <div>
+                    <span class="font-black text-2xl tracking-tighter uppercase block leading-none">ASTRO<span class="text-magenta">.</span>네오</span>
+                    <span class="font-mono text-xs font-bold text-black bg-teal px-1.5 py-0.5 border border-black inline-block mt-1">스타터_키트</span>
+                </div>
+            </a>
+
+            <!-- Search Bar (Desktop) -->
+            <div class="hidden md:flex items-center relative w-72">
+                <input type="text" id="searchInput" placeholder="포스트 또는 태그 검색..." 
+                    class="w-full bg-paper border-2 border-black px-4 py-2 font-mono text-sm font-bold uppercase placeholder-black/60 rounded-md focus:bg-white transition-all shadow-brutal-sm">
+                <i class="fa-solid fa-magnifying-glass absolute right-3 top-3 text-black"></i>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-3">
+                <button onclick="toggleTokensModal()" class="brutal-btn bg-teal text-black px-3 py-2 text-xs sm:text-sm uppercase flex items-center gap-2 rounded-md">
+                    <i class="fa-solid fa-code"></i>
+                    <span class="hidden sm:inline">디자인 토큰 규격</span>
+                </button>
+                <a href="https://astro.build" target="_blank" class="brutal-btn bg-yellow text-black px-3 py-2 text-xs sm:text-sm uppercase flex items-center gap-2 rounded-md">
+                    <i class="fa-solid fa-rocket"></i>
+                    <span>Astro 시작</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ==================== LIST VIEW CONTAINER ==================== -->
+        <div id="listView" class="space-y-10">
+
+            <!-- Hero Section -->
+            <section class="bg-yellow border-[3px] border-black p-6 sm:p-10 shadow-brutal-lg relative overflow-hidden rounded-lg">
+                <div class="absolute -right-12 -top-12 bg-magenta text-white font-mono font-bold text-xs uppercase py-2 px-16 rotate-45 border-2 border-black shadow-brutal z-10">
+                    추천 기술 아티클
+                </div>
+
+                <div class="max-w-3xl space-y-4">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="bg-black text-white font-mono text-xs font-bold px-2.5 py-1 uppercase rounded-sm">ASTRO 4.0</span>
+                        <span class="bg-teal text-black font-mono text-xs font-bold px-2.5 py-1 uppercase border border-black rounded-sm">디자인 시스템 스펙 v1.0</span>
+                    </div>
+
+                    <h1 class="text-3xl sm:text-5xl font-black tracking-tight uppercase leading-tight text-black">
+                        대담하게. 강렬하게.<br>
+                        <span class="bg-white px-2 border-2 border-black shadow-brutal inline-block mt-2">체계적으로. 실용적으로.</span>
+                    </h1>
+
+                    <p class="text-base sm:text-lg font-medium border-l-4 border-black pl-4 py-1 text-black bg-white/40">
+                        부드러운 그라데이션 대신 굵은 블랙 스트로크(2~3px)와 선명한 고대비 색상, 초고속 웹 성능을 선호하는 개발자를 위해 구현된 아스트로 블로그 테마 스펙입니다.
+                    </p>
+
+                    <div class="pt-2 flex flex-wrap gap-4">
+                        <button onclick="openPost(1)" class="brutal-btn bg-magenta text-white px-6 py-3 text-base uppercase tracking-wider flex items-center gap-2 rounded-md">
+                            대표 글 읽기 <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                        <a href="#articles" class="brutal-btn bg-white text-black px-6 py-3 text-base uppercase tracking-wider rounded-md">
+                            전체 아티클 둘러보기
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tag Filter & System Spec Indicator Bar -->
+            <section class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-4 border-black pb-6">
+                <!-- Tag Filters -->
+                <div class="flex flex-wrap items-center gap-2" id="tagFilters">
+                    <span class="font-mono font-bold text-xs uppercase mr-2 text-black/70">태그 필터:</span>
+                    <button onclick="filterByTag('ALL')" class="tag-btn brutal-btn bg-black text-white px-3 py-1 text-xs uppercase rounded-md">#전체</button>
+                    <button onclick="filterByTag('ASTRO')" class="tag-btn brutal-btn bg-white text-black px-3 py-1 text-xs uppercase rounded-md">#ASTRO</button>
+                    <button onclick="filterByTag('디자인시스템')" class="tag-btn brutal-btn bg-white text-black px-3 py-1 text-xs uppercase rounded-md">#디자인시스템</button>
+                    <button onclick="filterByTag('CSS')" class="tag-btn brutal-btn bg-white text-black px-3 py-1 text-xs uppercase rounded-md">#CSS</button>
+                    <button onclick="filterByTag('성능')" class="tag-btn brutal-btn bg-white text-black px-3 py-1 text-xs uppercase rounded-md">#성능</button>
+                </div>
+
+                <!-- View Switcher & Counter -->
+                <div class="font-mono text-xs font-bold bg-white border-2 border-black px-3 py-1.5 shadow-brutal-sm flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-teal border border-black animate-pulse"></span>
+                    <span>표시 중: <span id="postCount">4</span>개의 포스트</span>
+                </div>
+            </section>
+
+            <!-- Articles Grid -->
+            <section id="articles" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Cards dynamically populated by JS -->
+            </section>
+        </div>
+
+        <!-- ==================== POST DETAIL VIEW ==================== -->
+        <div id="detailView" class="hidden space-y-8">
+            <!-- Back Button Navigation -->
+            <div class="flex justify-between items-center">
+                <button onclick="showListView()" class="brutal-btn bg-white text-black px-4 py-2 font-mono text-sm uppercase flex items-center gap-2 rounded-md">
+                    <i class="fa-solid fa-chevron-left"></i> 전체 아티클 목록으로 돌아가기
+                </button>
+                <div class="font-mono text-xs bg-yellow border-2 border-black px-3 py-1.5 shadow-brutal-sm font-bold">
+                    라우팅: /posts/<span id="postSlug">astro-brutalism</span>.mdx
+                </div>
+            </div>
+
+            <!-- Post Header Banner -->
+            <article class="bg-white border-[3px] border-black p-6 sm:p-10 shadow-brutal-lg rounded-lg space-y-6">
+                <div class="space-y-4">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span id="detailBadge" class="bg-teal text-black border border-black font-mono text-xs font-bold px-3 py-1 uppercase rounded-sm">
+                            ASTRO
+                        </span>
+                        <span id="detailDate" class="font-mono text-xs font-bold text-black/70">
+                            2026년 8월 4일 • 5분 분량
+                        </span>
+                    </div>
+
+                    <h1 id="detailTitle" class="text-2xl sm:text-4xl font-black uppercase tracking-tight leading-tight text-black">
+                        ASTRO와 네오 브루탈리즘으로 만드는 초고속 웹사이트
+                    </h1>
+
+                    <p id="detailExcerpt" class="text-base font-medium text-black/80 border-l-4 border-magenta pl-4 py-1 italic bg-paper/60">
+                        아티클 요약문이 여기에 표시됩니다.
+                    </p>
+
+                    <!-- Author Meta Card -->
+                    <div class="flex items-center gap-4 pt-4 border-t-2 border-black">
+                        <div class="w-12 h-12 bg-magenta border-2 border-black rounded-md flex items-center justify-center font-black text-white text-xl shadow-brutal-sm">
+                            개발
+                        </div>
+                        <div>
+                            <div class="font-bold uppercase text-sm" id="detailAuthor">작성자: 아스트로 엔지니어</div>
+                            <div class="font-mono text-xs text-black/60">수석 UI 아키텍트 @ 네오 브루탈 시스템</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Post Body Content -->
+                <div class="border-t-2 border-black pt-8 space-y-6 text-base sm:text-lg leading-relaxed font-sans" id="detailBody">
+                    <!-- Dynamic Body Content Rendered Here -->
+                </div>
+
+                <!-- Interactive Like & Share Bar -->
+                <div class="border-t-[3px] border-black pt-6 flex flex-wrap items-center justify-between gap-4 bg-paper p-4 rounded-md border-2">
+                    <div class="flex items-center gap-4">
+                        <button onclick="addClap()" class="brutal-btn bg-yellow text-black px-4 py-2 text-sm uppercase flex items-center gap-2 rounded-md">
+                            <i class="fa-solid fa-hand-clap text-lg"></i>
+                            <span>응원하기 / 박수</span>
+                            <span id="clapCounter" class="bg-black text-white px-2 py-0.5 rounded-sm font-mono text-xs ml-1">142</span>
+                        </button>
+                        <button onclick="copyCurrentUrl()" class="brutal-btn bg-white text-black px-4 py-2 text-sm uppercase flex items-center gap-2 rounded-md">
+                            <i class="fa-solid fa-share-nodes"></i>
+                            <span>공유하기</span>
+                        </button>
+                    </div>
+
+                    <div id="toastMessage" class="hidden font-mono text-xs font-bold bg-black text-yellow px-3 py-2 border border-black">
+                        링크가 클립보드에 복사되었습니다!
+                    </div>
+                </div>
+            </article>
+
+            <!-- Comments Section -->
+            <section class="bg-white border-[3px] border-black p-6 shadow-brutal rounded-lg space-y-6">
+                <h3 class="text-2xl font-black uppercase tracking-tight flex items-center gap-2">
+                    <i class="fa-solid fa-comments text-magenta"></i> 댓글 토론 (<span id="commentCount">2</span>)
+                </h3>
+
+                <!-- Add Comment Form -->
+                <form id="commentForm" onsubmit="handleCommentSubmit(event)" class="space-y-4 bg-paper p-4 border-2 border-black rounded-md">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-mono text-xs font-bold uppercase mb-1">닉네임 / 핸들</label>
+                            <input type="text" id="commentAuthor" required placeholder="@개발자_유저" class="w-full bg-white border-2 border-black px-3 py-2 font-mono text-sm uppercase rounded-sm">
+                        </div>
+                        <div>
+                            <label class="block font-mono text-xs font-bold uppercase mb-1">직책 / 역할</label>
+                            <input type="text" id="commentRole" placeholder="프론트엔드 개발자" class="w-full bg-white border-2 border-black px-3 py-2 font-mono text-sm uppercase rounded-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-mono text-xs font-bold uppercase mb-1">댓글 내용</label>
+                        <textarea id="commentText" required rows="3" placeholder="네오 브루탈리즘 규격에 대한 피드백을 남겨주세요..." class="w-full bg-white border-2 border-black p-3 font-mono text-sm rounded-sm"></textarea>
+                    </div>
+                    <button type="submit" class="brutal-btn bg-teal text-black px-6 py-2 text-sm uppercase rounded-md">
+                        댓글 작성하기
+                    </button>
+                </form>
+
+                <!-- Comment List -->
+                <div id="commentsList" class="space-y-4">
+                    <!-- Dynamic comments -->
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <footer class="bg-black text-white border-t-[3px] border-black mt-16 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="space-y-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-yellow text-black border border-white font-black text-lg flex items-center justify-center">A</div>
+                    <span class="font-black text-xl tracking-tighter uppercase">ASTRO.네오 블로그</span>
+                </div>
+                <p class="font-mono text-xs text-gray-400">
+                    주관이 뚜렷한 네오 브루탈리즘 디자인 규격의 Astro 스타터 템플릿입니다. 런타임 오버헤드 제로, 선명한 스트로크 선 및 절대적 명시성을 지향합니다.
+                </p>
+                <div class="text-xs font-mono text-yellow">
+                    © 2026 ASTRO_NEO_BRUTAL_KR. NO RIGHTS RESERVED.
+                </div>
+            </div>
+
+            <div class="space-y-3 font-mono text-sm">
+                <div class="font-bold text-teal text-base uppercase border-b border-gray-800 pb-1">시스템 빠른 링크</div>
+                <ul class="space-y-2">
+                    <li><a href="#" onclick="showListView()" class="hover:text-yellow transition-colors">-> 메인 홈 카드 그리드</a></li>
+                    <li><a href="#" onclick="toggleTokensModal()" class="hover:text-yellow transition-colors">-> 디자인 시스템 토큰 규격보기</a></li>
+                    <li><a href="https://astro.build" target="_blank" class="hover:text-yellow transition-colors">-> Astro 공식 문서 ↗</a></li>
+                    <li><a href="https://tailwindcss.com" target="_blank" class="hover:text-yellow transition-colors">-> Tailwind CSS 문서 ↗</a></li>
+                </ul>
+            </div>
+
+            <!-- Newsletter Signup -->
+            <div class="space-y-3 bg-white text-black p-4 border-2 border-white shadow-[4px_4px_0px_#FF00FF]">
+                <div class="font-black text-sm uppercase">네오 개발 뉴스레터</div>
+                <p class="text-xs font-mono">스팸 없음. 월 1회 대담하고 유익한 개발 팁 전달.</p>
+                <form onsubmit="event.preventDefault(); alert('네오 브루탈리즘 뉴스레터 구독이 완료되었습니다!');" class="space-y-2">
+                    <input type="email" required placeholder="DEV@DOMAIN.COM" class="w-full bg-paper border-2 border-black p-2 font-mono text-xs uppercase rounded-sm">
+                    <button type="submit" class="w-full brutal-btn bg-magenta text-white py-2 text-xs uppercase rounded-sm">
+                        지금 구독하기
+                    </button>
+                </form>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Design Tokens Modal -->
+    <div id="tokensModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-paper border-[3px] border-black shadow-brutal-xl max-w-3xl w-full max-h-[90vh] flex flex-col rounded-lg overflow-hidden">
+            <!-- Modal Header -->
+            <div class="bg-teal border-b-2 border-black p-4 flex justify-between items-center">
+                <div class="font-black text-lg uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> 한글 디자인 토큰 명세서 (JSON Spec)
+                </div>
+                <button onclick="toggleTokensModal()" class="w-8 h-8 bg-black text-white font-black border border-black flex items-center justify-center hover:bg-magenta transition-colors">
+                    ✕
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto space-y-6">
+                <p class="text-sm font-bold uppercase border-b-2 border-black pb-2">
+                    이 템플릿은 전달주신 네오 브루탈리즘 디자인 토큰 매핑 규칙을 직접 구현하였습니다:
+                </p>
+
+                <!-- Color Swatches Grid -->
+                <div>
+                    <h4 class="font-mono text-xs font-bold uppercase mb-2">컬러 팔레트 토큰:</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-xs font-bold">
+                        <div class="p-3 bg-teal border-2 border-black shadow-brutal-sm flex flex-col">
+                            <span>accentTeal (청록)</span>
+                            <span class="text-xs font-normal">#00C2CB</span>
+                        </div>
+                        <div class="p-3 bg-magenta text-white border-2 border-black shadow-brutal-sm flex flex-col">
+                            <span>accentMagenta (자홍)</span>
+                            <span class="text-xs font-normal">#FF00FF</span>
+                        </div>
+                        <div class="p-3 bg-yellow border-2 border-black shadow-brutal-sm flex flex-col">
+                            <span>accentYellow (노랑)</span>
+                            <span class="text-xs font-normal">#FFD700</span>
+                        </div>
+                        <div class="p-3 bg-paper border-2 border-black shadow-brutal-sm flex flex-col">
+                            <span>paperBeige (종이베이지)</span>
+                            <span class="text-xs font-normal">#F5F5DC</span>
+                        </div>
+                        <div class="p-3 bg-black text-white border-2 border-black shadow-brutal-sm flex flex-col">
+                            <span>black (블랙)</span>
+                            <span class="text-xs font-normal">#000000</span>
+                        </div>
+                        <div class="p-3 bg-white border-2 border-black shadow-brutal-sm flex flex-col">
+                            <span>white (화이트)</span>
+                            <span class="text-xs font-normal">#FFFFFF</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Elevation Tokens -->
+                <div>
+                    <h4 class="font-mono text-xs font-bold uppercase mb-2">그림자 높낮이 토큰 (Elevation):</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs">
+                        <div class="bg-white p-3 border-2 border-black shadow-none font-bold">
+                            shadow0: none (없음)
+                        </div>
+                        <div class="bg-white p-3 border-2 border-black shadow-brutal font-bold">
+                            shadow1: 4px 4px 0px #000
+                        </div>
+                        <div class="bg-white p-3 border-2 border-black shadow-brutal-lg font-bold">
+                            shadow2: 12px 12px 0px #000
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JSON Raw Spec Viewer -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <h4 class="font-mono text-xs font-bold uppercase">원본 JSON 디자인 토큰 명세:</h4>
+                        <button onclick="copyRawJson()" class="font-mono text-xs bg-black text-yellow px-2 py-0.5 border border-black font-bold">JSON 복사</button>
+                    </div>
+                    <pre id="jsonDisplay" class="bg-black text-green-400 font-mono text-xs p-4 border-2 border-black overflow-x-auto max-h-48 rounded-sm">
+{
+  "meta": {
+    "styleName": "네오 브루탈리즘 디자인 시스템",
+    "description": "대담하게. 강렬하게. 체계적으로. 실용적으로.",
+    "usageRules": {
+      "borders": "두꺼운 블랙 스트로크 (2px~3px solid #000000)",
+      "corners": "각진 모서리 / 제한된 둥근 모서리",
+      "accents": "선명한 고대비 단색 블록",
+      "grid": "엄격한 그리드 정렬",
+      "focusState": "포커스 상태 명확히 표시"
+    }
+  },
+  "colorPalette": {
+    "accentTeal": "#00C2CB",
+    "accentMagenta": "#FF00FF",
+    "accentYellow": "#FFD700",
+    "black": "#000000",
+    "white": "#FFFFFF",
+    "paperBeige": "#F5F5DC"
+  },
+  "typography": {
+    "fontFamily": "Noto Sans KR, Inter, sans-serif"
+  }
+}
+                    </pre>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-white border-t-2 border-black p-4 flex justify-end">
+                <button onclick="toggleTokensModal()" class="brutal-btn bg-black text-white px-6 py-2 text-sm uppercase rounded-md">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Korean Sample Blog Posts Data Mock
+        const postsData = [
+            {
+                id: 1,
+                title: "ASTRO와 네오 브루탈리즘으로 만드는 초고속 웹사이트",
+                slug: "astro-brutalist-guide-kr",
+                excerpt: "부드러운 그림자와 연한 파스텔톤을 버리고, 선명한 고대비와 굵은 획, JS 오버헤드가 제로인 아스트로 엔진을 선택해야 하는 이유를 알아봅니다.",
+                date: "2026년 8월 4일",
+                readTime: "5분 분량",
+                tag: "ASTRO",
+                tagBg: "bg-teal",
+                author: "아스트로 엔지니어",
+                claps: 142,
+                content: `
+                    <p class="font-bold text-xl">웹은 원래 개성 있고 강렬하며 예측 불가한 재미가 있었습니다. 네오 브루탈리즘은 최신 웹 성능 표준인 Astro 4.0과 결합하여 날것의 에너지를 현대적인 UX로 재탄생시킵니다.</p>
+
+                    <h2 class="text-2xl font-black uppercase mt-6 mb-3 bg-yellow inline-block px-2 border-2 border-black">1. 네오 브루탈리즘이란 무엇인가?</h2>
+                    <p>사용성을 무시하던 초기 원시 브루탈리즘과 달리, <strong>네오 브루탈리즘(Neo-Brututalism)</strong>은 고대비 컬러, 엄격한 그리드, 굵은 블랙 테두리(<code>2px - 3px solid #000000</code>) 및 단색 인센티브 블록을 유지하면서도 100% 접근 가능한 UX를 지향합니다.</p>
+
+                    <h2 class="text-2xl font-black uppercase mt-6 mb-3 bg-magenta text-white inline-block px-2 border-2 border-black">2. 왜 Astro가 완벽한 엔진인가?</h2>
+                    <p>Astro는 기본적으로 <strong>클라이언트 런타임 자바스크립트를 0바이트(Zero JS)로 배출</strong>합니다. Tailwind CSS와 같은 직관적인 스타일 프레임워크와 조합할 경우 라이트하우스 100점을 기록하는 고성능 블로그를 순식간에 구축할 수 있습니다.</p>
+
+                    <div class="my-6 bg-black text-white p-4 font-mono border-[3px] border-black shadow-brutal">
+                        <div class="text-yellow font-bold text-xs uppercase mb-2">// Astro 샘플 컴포넌트 코드</div>
+                        <code>
+                            ---<br>
+                            import Card from '../components/Card.astro';<br>
+                            const { title, tag } = Astro.props;<br>
+                            ---<br>
+                            &lt;article class="border-3 border-black bg-white p-6 shadow-brutal hover:-translate-y-1 transition-transform"&gt;<br>
+                            &nbsp;&nbsp;&lt;span class="bg-yellow px-2 py-1 border border-black font-mono"&gt;{tag}&lt;/span&gt;<br>
+                            &nbsp;&nbsp;&lt;h3 class="text-2xl font-black uppercase"&gt;{title}&lt;/h3&gt;<br>
+                            &lt;/article&gt;
+                        </code>
+                    </div>
+
+                    <h2 class="text-2xl font-black uppercase mt-6 mb-3 bg-teal inline-block px-2 border-2 border-black">3. 하드 오프셋 그림자 토큰</h2>
+                    <p>본 디자인 시스템 규격의 그림자 토큰을 주목하세요. 방사형 블러(Blur) 대신 오프셋이 명확한 블랙 박스를 사용합니다 (<code>4px 4px 0px #000000</code> 또는 <code>12px 12px 0px #000000</code>). GPU 부하 없이 입체감을 표현합니다.</p>
+                `
+            },
+            {
+                id: 2,
+                title: "JS 제로 아키텍처: ASTRO 아일랜드 시스템의 원리",
+                slug: "astro-islands-architecture-kr",
+                excerpt: "컴포넌트 단위의 아일랜드 수화(Island Hydration)가 어떻게 웹 페이지의 가벼움을 유지하고 렌더링 성능을 극대화하는지 설명합니다.",
+                date: "2026년 7월 28일",
+                readTime: "4분 분량",
+                tag: "성능",
+                tagBg: "bg-magenta text-white",
+                author: "성능 최적화 리드",
+                claps: 98,
+                content: `
+                    <p class="font-bold text-xl">기존의 싱글 페이지 애플리케이션(SPA)은 단순 정적 텍스트를 보여주기 위해 수 메가바이트의 자바스크립트를 전송하곤 했습니다.</p>
+                    <h2 class="text-2xl font-black uppercase mt-6 mb-3 bg-yellow inline-block px-2 border-2 border-black">대화형 수화(Hydration) 디렉티브</h2>
+                    <p>Astro를 사용하면 <code>client:visible</code> 또는 <code>client:load</code> 디렉티브를 통해 필요한 컴포넌트만 선택적으로 대화형 상태로 전환할 수 있습니다.</p>
+                `
+            },
+            {
+                id: 3,
+                title: "브루탈리스트 디자인 시스템을 위한 TAILWIND CSS 활용법",
+                slug: "tailwind-brutalist-design-system-kr",
+                excerpt: "하드 오프셋 그림자 토큰, 2px/3px 두꺼운 테두리 스트로크, 고대비 컬러 팔레트를 Tailwind 테마에 확장 설정하는 실전 노하우.",
+                date: "2026년 7월 15일",
+                readTime: "7분 분량",
+                tag: "CSS",
+                tagBg: "bg-yellow",
+                author: "CSS 마법사",
+                claps: 215,
+                content: `
+                    <p class="font-bold text-xl">Tailwind CSS의 테마 확장(theme.extend) 기능을 사용하면 규격화된 네오 브루탈리즘 토큰을 간편히 정의할 수 있습니다.</p>
+                    <h2 class="text-2xl font-black uppercase mt-6 mb-3 bg-teal inline-block px-2 border-2 border-black">하드 오프셋 그림자 커스텀 커스텀</h2>
+                    <p>boxShadow 속성에 4px 4px 0px #000000 규격을 등록하여 전역 컴포넌트에 통일된 입체감을 부여하세요.</p>
+                `
+            },
+            {
+                id: 4,
+                title: "2026년 웹 UI에서 대담하고 강렬한 타이포그래피가 중요한 이유",
+                slug: "loud-typography-design-system-kr",
+                excerpt: "대문자 헤더, 두꺼운 폰트 웨이트, 고대비 본문 텍스트가 가독성과 사용자 경험에 미치는 정량적 영향을 분석합니다.",
+                date: "2026년 6월 30일",
+                readTime: "3분 분량",
+                tag: "디자인시스템",
+                tagBg: "bg-paper",
+                author: "UX 전략가",
+                claps: 74,
+                content: `
+                    <p class="font-bold text-xl">은은한 파스텔톤과 얇은 폰트는 시각 장애인이나 야외 사용자에게 전달력이 떨어집니다. 굵은 볼드체와 명확한 대비가 실제 사용자 경험을 향상시킵니다.</p>
+                `
+            }
+        ];
+
+        // Sample Initial Comments Data
+        let comments = [
+            { author: "@프론트엔드_고수", role: "디자인 테크 리드", text: "흔한 기업형 글래스모피즘 디자인이 아니라서 정말 신선하네요! 3px 두꺼운 스트로크 테두리가 가독성을 크게 높여줍니다." },
+            { author: "@아스트로_열혈팬", role: "DevRel", text: "Astro의 초고속 성능과 네오 브루탈리즘 단색 블록 스타일이 완벽하게 잘 어울립니다." }
+        ];
+
+        let currentPost = postsData[0];
+
+        // Render Articles Grid
+        function renderArticlesGrid(posts) {
+            const grid = document.getElementById('articles');
+            document.getElementById('postCount').innerText = posts.length;
+
+            if (posts.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-white border-2 border-black p-8 text-center font-mono font-bold">
+                        검색 조건에 맞는 포스트가 존재하지 않습니다!
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = posts.map(post => `
+                <article class="bg-white border-[3px] border-black p-6 shadow-brutal flex flex-col justify-between rounded-lg hover:-translate-y-1.5 transition-all duration-150 group">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="${post.tagBg} border border-black font-mono text-xs font-bold px-2.5 py-0.5 uppercase">
+                                #${post.tag}
+                            </span>
+                            <span class="font-mono text-xs font-bold text-black/60">${post.readTime}</span>
+                        </div>
+
+                        <h2 class="text-xl font-black uppercase tracking-tight leading-snug group-hover:text-magenta transition-colors">
+                            ${post.title}
+                        </h2>
+
+                        <p class="text-sm font-medium text-black/70 line-clamp-3">
+                            ${post.excerpt}
+                        </p>
+                    </div>
+
+                    <div class="pt-6 mt-6 border-t-2 border-black flex items-center justify-between">
+                        <span class="font-mono text-xs font-bold text-black/80">${post.date}</span>
+                        <button onclick="openPost(${post.id})" class="brutal-btn bg-yellow text-black px-3 py-1.5 text-xs uppercase flex items-center gap-1">
+                            읽기 <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        // Open Post Detail View
+        function openPost(postId) {
+            currentPost = postsData.find(p => p.id === postId) || postsData[0];
+            
+            document.getElementById('postSlug').innerText = currentPost.slug;
+            document.getElementById('detailTitle').innerText = currentPost.title;
+            document.getElementById('detailExcerpt').innerText = currentPost.excerpt;
+            document.getElementById('detailBadge').innerText = `#${currentPost.tag}`;
+            document.getElementById('detailBadge').className = `${currentPost.tagBg} border border-black font-mono text-xs font-bold px-3 py-1 uppercase rounded-sm`;
+            document.getElementById('detailDate').innerText = `${currentPost.date} • ${currentPost.readTime}`;
+            document.getElementById('detailAuthor').innerText = `작성자: ${currentPost.author}`;
+            document.getElementById('detailBody').innerHTML = currentPost.content;
+            document.getElementById('clapCounter').innerText = currentPost.claps;
+
+            document.getElementById('listView').classList.add('hidden');
+            document.getElementById('detailView').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Return to List View
+        function showListView() {
+            document.getElementById('detailView').classList.add('hidden');
+            document.getElementById('listView').classList.remove('hidden');
+        }
+
+        // Filter Posts by Tag
+        function filterByTag(tag) {
+            const tagButtons = document.querySelectorAll('.tag-btn');
+            tagButtons.forEach(btn => {
+                if(btn.innerText.includes(tag)) {
+                    btn.classList.remove('bg-white', 'text-black');
+                    btn.classList.add('bg-black', 'text-white');
+                } else {
+                    btn.classList.remove('bg-black', 'text-white');
+                    btn.classList.add('bg-white', 'text-black');
+                }
+            });
+
+            if (tag === 'ALL') {
+                renderArticlesGrid(postsData);
+            } else {
+                const filtered = postsData.filter(p => p.tag === tag);
+                renderArticlesGrid(filtered);
+            }
+        }
+
+        // Search Filter Listener
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const filtered = postsData.filter(p => 
+                p.title.toLowerCase().includes(query) || 
+                p.excerpt.toLowerCase().includes(query) ||
+                p.tag.toLowerCase().includes(query)
+            );
+            renderArticlesGrid(filtered);
+        });
+
+        // Add Clap Handler
+        function addClap() {
+            currentPost.claps += 1;
+            document.getElementById('clapCounter').innerText = currentPost.claps;
+        }
+
+        // Copy Share URL Handler
+        function copyCurrentUrl() {
+            const toast = document.getElementById('toastMessage');
+            const dummy = document.createElement('input');
+            document.body.appendChild(dummy);
+            dummy.value = window.location.href;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 2500);
+        }
+
+        // Render Comments List
+        function renderComments() {
+            const container = document.getElementById('commentsList');
+            document.getElementById('commentCount').innerText = comments.length;
+            container.innerHTML = comments.map(c => `
+                <div class="bg-paper border-2 border-black p-4 rounded-md shadow-brutal-sm space-y-1">
+                    <div class="flex justify-between items-center">
+                        <span class="font-mono font-bold text-xs uppercase bg-black text-white px-2 py-0.5">${c.author}</span>
+                        <span class="font-mono text-xs text-black/60 font-bold uppercase">${c.role}</span>
+                    </div>
+                    <p class="font-mono text-xs font-bold pt-2 uppercase">${c.text}</p>
+                </div>
+            `).join('');
+        }
+
+        // Handle Comment Submission
+        function handleCommentSubmit(event) {
+            event.preventDefault();
+            const author = document.getElementById('commentAuthor').value;
+            const role = document.getElementById('commentRole').value || '개발자';
+            const text = document.getElementById('commentText').value;
+
+            comments.unshift({ author, role, text });
+            renderComments();
+
+            // Reset Form
+            document.getElementById('commentAuthor').value = '';
+            document.getElementById('commentRole').value = '';
+            document.getElementById('commentText').value = '';
+        }
+
+        // Toggle Tokens Modal
+        function toggleTokensModal() {
+            const modal = document.getElementById('tokensModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function copyRawJson() {
+            const rawJson = `{\n  "meta": {\n    "styleName": "네오 브루탈리즘 디자인 시스템",\n    "description": "대담하게. 강렬하게. 체계적으로. 실용적으로.",\n    "usageRules": {\n      "borders": "두꺼운 블랙 스트로크 (2px~3px solid #000000)",\n      "corners": "각진 모서리 / 제한된 둥근 모서리",\n      "accents": "선명한 고대비 단색 블록",\n      "grid": "엄격한 그리드 정렬",\n      "focusState": "포커스 상태 명확히 표시"\n    }\n  },\n  "colorPalette": {\n    "accentTeal": "#00C2CB",\n    "accentMagenta": "#FF00FF",\n    "accentYellow": "#FFD700",\n    "black": "#000000",\n    "white": "#FFFFFF",\n    "paperBeige": "#F5F5DC"\n  }\n}`;
+            const dummy = document.createElement('textarea');
+            document.body.appendChild(dummy);
+            dummy.value = rawJson;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+            alert('한글 디자인 토큰 JSON 명세가 클립보드에 복사되었습니다!');
+        }
+
+        // Initialize App on Window Load
+        window.onload = function() {
+            renderArticlesGrid(postsData);
+            renderComments();
+        };
+    </script>
+</body>
+</html>

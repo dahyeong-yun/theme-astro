@@ -1,25 +1,30 @@
 ---
 import { getCollection } from 'astro:content'
+import type { Page } from 'astro'
 import config from 'virtual:blog-config'
-import FormattedDate from '../../theme/components/FormattedDate.astro'
-import Footer from '../../theme/components/Footer.astro'
-import Header from '../../theme/components/Header.astro'
-import BaseHead from '../../theme/components/BaseHead.astro'
+import FormattedDate from '../../../theme/components/FormattedDate.astro'
+import Footer from '../../../theme/components/Footer.astro'
+import Header from '../../../theme/components/Header.astro'
+import BaseHead from '../../../theme/components/BaseHead.astro'
 
-const allPosts = (await getCollection('posts'))
-  .filter((p) => !p.data.draft)
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+export async function getStaticPaths({ paginate }: { paginate: any }) {
+  const posts = (await getCollection('posts'))
+    .filter((p) => !p.data.draft)
+    .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+  return paginate(posts, { pageSize: 6 });
+}
 
-const pageSize = 6;
-const posts = allPosts.slice(0, pageSize);
-const totalPages = Math.ceil(allPosts.length / pageSize);
-const currentPage = 1;
+interface Props {
+  page: Page<any>;
+}
+
+const { page } = Astro.props;
 ---
 
 <!doctype html>
 <html lang={config.site.language}>
   <head>
-    <BaseHead title={`Blog | ${config.site.title}`} description={config.site.description} />
+    <BaseHead title={`Blog (Page ${page.currentPage}) | ${config.site.title}`} description={config.site.description} />
     <style>
       main {
         max-width: 860px;
@@ -224,11 +229,11 @@ const currentPage = 1;
     <main>
       <div class="page-header">
         <h1 class="page-title">Articles</h1>
-        <p class="page-subtitle">두껍고 강렬한 네오 브루탈리즘 스타일로 전하는 개발 이야기</p>
+        <p class="page-subtitle">두껍고 강렬한 네오 브루탈리즘 스타일로 전하는 개발 이야기 (Page {page.currentPage})</p>
       </div>
       
       <div class="posts-grid">
-        {posts.map((post) => {
+        {page.data.map((post: any) => {
           const cleanPostId = post.id.replace(/^\/|\/$/g, '').replace(/\/index$/, '');
           return (
             <a href={`/blog/${cleanPostId}/`} class="post-card">
@@ -258,16 +263,22 @@ const currentPage = 1;
       </div>
 
       <!-- Pagination UI -->
-      {totalPages > 1 && (
+      {page.lastPage > 1 && (
         <nav class="pagination-nav" aria-label="Blog pagination">
-          <span class="page-btn prev-next disabled">
-            &larr; Prev
-          </span>
+          {page.url.prev ? (
+            <a href={page.currentPage === 2 ? '/blog/' : page.url.prev} class="page-btn prev-next">
+              &larr; Prev
+            </a>
+          ) : (
+            <span class="page-btn prev-next disabled">
+              &larr; Prev
+            </span>
+          )}
 
           <div class="page-numbers">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => {
+            {Array.from({ length: page.lastPage }, (_, i) => i + 1).map((num) => {
               const pageUrl = num === 1 ? '/blog/' : `/blog/page/${num}/`;
-              const isCurrent = currentPage === num;
+              const isCurrent = page.currentPage === num;
               return (
                 <a 
                   href={pageUrl} 
@@ -280,9 +291,15 @@ const currentPage = 1;
             })}
           </div>
 
-          <a href="/blog/page/2/" class="page-btn prev-next">
-            Next &rarr;
-          </a>
+          {page.url.next ? (
+            <a href={page.url.next} class="page-btn prev-next">
+              Next &rarr;
+            </a>
+          ) : (
+            <span class="page-btn prev-next disabled">
+              Next &rarr;
+            </span>
+          )}
         </nav>
       )}
     </main>

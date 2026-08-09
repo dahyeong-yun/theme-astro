@@ -100,9 +100,10 @@ function getPostSlug(post: any) {
 <style>
   .series-container {
     background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    margin: 2.5rem 0;
+    border: 3px solid var(--color-border);
+    box-shadow: var(--box-shadow);
+    border-radius: 4px;
+    margin: 3rem 0;
     overflow: hidden;
     font-family: var(--font-sans);
   }
@@ -111,9 +112,9 @@ function getPostSlug(post: any) {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.25rem;
-    background: rgba(255, 255, 255, 0.02);
-    border-bottom: 1px solid var(--color-border);
+    padding: 1.2rem 1.5rem;
+    background: var(--color-surface-secondary);
+    border-bottom: 3px solid var(--color-border);
   }
 
   .series-title-area {
@@ -124,43 +125,46 @@ function getPostSlug(post: any) {
   }
 
   .series-icon {
-    color: var(--color-accent);
+    color: var(--color-text-primary);
     flex-shrink: 0;
   }
 
   .series-label {
-    font-size: 0.7rem;
-    font-weight: 800;
-    color: var(--color-accent);
+    font-size: 0.75rem;
+    font-weight: 900;
+    color: var(--color-text-primary);
     letter-spacing: 0.1em;
-    background: rgba(88, 166, 255, 0.1);
-    padding: 0.1rem 0.4rem;
-    border-radius: 4px;
+    background: var(--color-accent);
+    padding: 0.2rem 0.5rem;
+    border: 2px solid var(--color-border);
+    border-radius: 2px;
     flex-shrink: 0;
   }
 
   .series-title {
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-size: 1.1rem;
+    font-weight: 900;
     margin: 0;
     color: var(--color-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-transform: uppercase;
   }
 
   .series-count {
     font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--color-text-secondary);
-    background: rgba(255, 255, 255, 0.05);
-    padding: 0.2rem 0.5rem;
-    border-radius: 20px;
+    font-weight: 900;
+    color: var(--color-text-primary);
+    background: var(--color-surface);
+    border: 2px solid var(--color-border);
+    padding: 0.2rem 0.6rem;
+    border-radius: 2px;
     flex-shrink: 0;
   }
 
   .series-body {
-    padding: 1rem 1.25rem;
+    padding: 1.25rem;
   }
 
   .series-list {
@@ -169,53 +173,53 @@ function getPostSlug(post: any) {
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.6rem;
   }
 
   .series-item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    transition: background 0.15s ease;
+    padding: 0.6rem 0.8rem;
+    border: 2px solid transparent;
+    font-size: 0.9rem;
+    transition: all 0.1s ease;
   }
 
   .series-item:not(.active):hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--color-bg);
+    border: 2px solid var(--color-border);
+    box-shadow: 2px 2px 0px var(--color-border);
+    transform: translate(-1px, -1px);
   }
 
   .series-item-number {
     font-family: var(--font-mono);
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: 0.85rem;
+    font-weight: 900;
     color: var(--color-text-secondary);
     width: 1.5rem;
   }
 
   .series-item-title-link {
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
+    font-weight: 700;
     text-decoration: none;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    transition: color 0.15s ease;
     width: 100%;
   }
 
-  .series-item-title-link:hover {
-    color: var(--color-accent);
-  }
-
   .series-item.active {
-    background: rgba(88, 166, 255, 0.08);
-    border: 1px solid rgba(88, 166, 255, 0.2);
+    background: var(--color-bg);
+    border: 2px solid var(--color-border);
+    box-shadow: 3px 3px 0px var(--color-border);
   }
 
   .series-item-title.current {
-    font-weight: 700;
-    color: var(--color-accent);
+    font-weight: 900;
+    color: var(--color-text-primary);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -232,11 +236,12 @@ function getPostSlug(post: any) {
 
   .current-badge {
     font-size: 0.7rem;
-    font-weight: 600;
-    background: var(--color-accent);
-    color: var(--color-bg);
+    font-weight: 900;
+    background: var(--color-magenta);
+    color: #ffffff;
+    border: 2px solid var(--color-border);
     padding: 0.1rem 0.4rem;
-    border-radius: 4px;
+    border-radius: 2px;
     margin-left: 0.5rem;
     flex-shrink: 0;
   }
@@ -245,38 +250,39 @@ function getPostSlug(post: any) {
   .series-footer-nav {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    border-top: 1px solid var(--color-border);
+    border-top: 3px solid var(--color-border);
   }
 
   .series-footer-nav .nav-btn {
     display: flex;
     flex-direction: column;
-    padding: 0.85rem 1.25rem;
+    padding: 1rem 1.5rem;
     text-decoration: none;
-    transition: background 0.15s ease;
+    transition: all 0.1s ease;
     min-width: 0;
+    background: var(--color-surface);
   }
 
   .series-footer-nav .nav-btn.prev {
-    border-right: 1px solid var(--color-border);
+    border-right: 3px solid var(--color-border);
   }
 
   .series-footer-nav .nav-btn:not(.disabled):hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--color-accent);
   }
 
   .series-footer-nav .nav-dir {
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: 0.75rem;
+    font-weight: 900;
     text-transform: uppercase;
     color: var(--color-text-secondary);
     letter-spacing: 0.05em;
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.3rem;
   }
 
   .series-footer-nav .nav-title {
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.95rem;
+    font-weight: 900;
     color: var(--color-text-primary);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -284,8 +290,9 @@ function getPostSlug(post: any) {
   }
 
   .series-footer-nav .nav-btn.disabled {
-    opacity: 0.4;
+    opacity: 0.5;
     cursor: not-allowed;
+    background: var(--color-bg);
   }
   
   .series-footer-nav .nav-btn.disabled .nav-title {
@@ -298,7 +305,7 @@ function getPostSlug(post: any) {
     }
     .series-footer-nav .nav-btn.prev {
       border-right: none;
-      border-bottom: 1px solid var(--color-border);
+      border-bottom: 3px solid var(--color-border);
     }
   }
 </style>

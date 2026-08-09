@@ -1,20 +1,41 @@
 ---
 import config from 'virtual:blog-config'
 import HeaderLink from './HeaderLink.astro'
+
+const marqueeItems = config.site.marqueeText || [
+  'ASTRO',
+  '네오 브루탈리즘 디자인 시스템',
+  'NO GRADIENTS',
+  '100% LIGHTHOUSE',
+  'HIGH CONTRAST ALWAYS'
+]
+const marqueeString = `⚡ ${marqueeItems.join(' • ')} • ⚡ ${marqueeItems.join(' • ')} •`
 ---
+
+<div class="marquee-banner">
+  <div class="marquee-content">
+    {marqueeString}
+  </div>
+</div>
 
 <header>
   <nav>
-    <h2><a href="/">{config.site.title}</a></h2>
+    <a href="/" class="logo-group">
+      <div class="logo-box">A</div>
+      <span class="logo-text">{config.site.title}</span>
+    </a>
+    
     <div class="nav-right">
-      <div class="nav-links">
+      <!-- 데스크톱 네비게이션 링크 -->
+      <div class="nav-links desktop-only">
         {config.navigation.map((item) => (
           <HeaderLink href={item.href}>{item.title}</HeaderLink>
         ))}
       </div>
-      <button id="theme-toggle" aria-label="Toggle theme" class="theme-toggle-btn">
+      
+      <button id="theme-toggle" aria-label="Toggle theme" class="brutal-btn theme-toggle-btn">
         <!-- Sun Icon (Light Mode -> 누르면 Dark로) -->
-        <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="4"></circle>
           <path d="M12 2v2"></path>
           <path d="M12 20v2"></path>
@@ -26,89 +47,239 @@ import HeaderLink from './HeaderLink.astro'
           <path d="M19.07 4.93l-1.41 1.41"></path>
         </svg>
         <!-- Moon Icon (Dark Mode -> 누르면 Light로) -->
-        <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+        <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
           <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
         </svg>
       </button>
+
+      <!-- 모바일용 햄버거 토글 버튼 (SVG 아이콘을 제거하고 텍스트 토글 방식으로 간소화) -->
+      <button id="mobile-menu-toggle" class="brutal-btn mobile-only menu-btn" aria-label="Open navigation menu">
+        <span class="menu-text">MENU</span>
+      </button>
     </div>
   </nav>
+
+  <!-- 모바일용 드롭다운 메뉴 (mobile-only 클래스를 삭제하여 CSS로 제어) -->
+  <div id="mobile-menu-dropdown" class="mobile-menu-overlay">
+    <div class="mobile-nav-links">
+      {config.navigation.map((item) => (
+        <a href={item.href} class="mobile-nav-link">
+          <span>{item.title}</span>
+          <span class="arrow">&rarr;</span>
+        </a>
+      ))}
+    </div>
+  </div>
 </header>
 
 <style>
+  .marquee-banner {
+    background: #000000;
+    color: #ffffff;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    padding: 0.5rem 0;
+    overflow: hidden;
+    border-bottom: 3px solid var(--color-border);
+  }
+  
+  html[data-theme="dark"] .marquee-banner {
+    background: #ffffff;
+    color: #000000;
+  }
+  
+  .marquee-content {
+    display: flex;
+    width: 200%;
+    animation: marquee 20s linear infinite;
+    white-space: nowrap;
+  }
+  
+  @keyframes marquee {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+  }
+
   header {
     margin: 0;
     padding: 0 1.5rem;
-    background: var(--color-bg-header);
-    box-shadow: 0 1px 0 var(--color-border-hairline);
+    background: var(--color-surface);
+    border-bottom: 3px solid var(--color-border);
     position: sticky;
     top: 0;
     z-index: 100;
-    backdrop-filter: blur(24px) saturate(1.5);
-    transition: background-color 0.3s var(--transition-timing), box-shadow 0.3s var(--transition-timing);
+    transition: background-color var(--transition-speed) var(--transition-timing);
   }
+  
   @media (max-width: 640px) {
     header {
       padding: 0 1rem;
     }
   }
+  
   nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    max-width: 860px;
+    max-width: 1120px;
     margin: 0 auto;
-    height: 56px;
+    height: 70px;
   }
-  h2 {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-  h2 a {
+  
+  .logo-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     text-decoration: none;
-    color: var(--color-text-header-hover);
-    transition: opacity 0.2s ease;
   }
-  h2 a:hover {
-    opacity: 0.8;
+  
+  .logo-box {
+    width: 40px;
+    height: 40px;
+    background: var(--color-surface-secondary);
+    border: 3px solid var(--color-border);
+    box-shadow: 3px 3px 0px var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: var(--color-text-primary);
+    transition: all 0.1s ease;
   }
+  
+  .logo-group:hover .logo-box {
+    transform: rotate(6deg) scale(1.05);
+    box-shadow: 4px 4px 0px var(--color-border);
+  }
+  
+  .logo-text {
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: var(--color-text-primary);
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+  }
+  
   .nav-right {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem;
   }
+  
   .nav-links {
     display: flex;
     gap: 0.5rem;
   }
+  
   .theme-toggle-btn {
-    background: transparent;
-    border: none;
-    padding: 6px;
-    border-radius: 50%;
-    cursor: pointer;
-    color: var(--color-text-header);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s ease, transform 0.15s ease, color 0.2s ease;
+    padding: 0.4rem;
+    background: var(--color-surface);
+    width: 40px;
+    height: 40px;
+    box-shadow: 3px 3px 0px var(--color-border);
   }
+  
   .theme-toggle-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--color-text-header-hover);
+    background: var(--color-accent);
   }
-  .theme-toggle-btn:active {
-    transform: scale(0.95);
+
+  /* 반응형 분기 처리 */
+  .desktop-only {
+    display: flex;
   }
-  @media (max-width: 720px) {
-    .nav-links {
-      gap: 0.25rem;
+  .mobile-only {
+    display: none !important;
+  }
+
+  @media (max-width: 640px) {
+    .desktop-only {
+      display: none !important;
     }
-    .nav-right {
-      gap: 0.75rem;
+    .mobile-only {
+      display: flex !important;
     }
+    .logo-text {
+      font-size: 1.2rem;
+    }
+    
+    /* 모바일 햄버거 버튼 (모바일 뷰포트 내로 완전히 스코프 이동) */
+    .menu-btn {
+      background: var(--color-surface-secondary);
+      color: var(--color-text-primary);
+      height: 40px;
+      padding: 0 0.8rem;
+      font-size: 0.85rem;
+      font-weight: 900;
+      box-shadow: 3px 3px 0px var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .menu-btn:hover {
+      background: var(--color-accent);
+    }
+  }
+
+  /* 모바일 오버레이 드롭다운 */
+  .mobile-menu-overlay {
+    display: none;
+  }
+
+  @media (max-width: 640px) {
+    .mobile-menu-overlay {
+      display: none;
+      position: absolute;
+      top: 70px; /* 헤더 높이만큼 띄움 */
+      left: 0;
+      width: 100%;
+      background: var(--color-accent);
+      border-bottom: 3px solid var(--color-border);
+      z-index: 99;
+      box-shadow: 0px 8px 0px var(--color-border);
+    }
+
+    /* 메뉴 활성화 상태 */
+    .mobile-menu-overlay.open {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  .mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .mobile-nav-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 2rem;
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #000000 !important;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-bottom: 2px solid var(--color-border);
+    background: var(--color-bg);
+  }
+
+  .mobile-nav-link:last-child {
+    border-bottom: none;
+  }
+
+  .mobile-nav-link:hover {
+    background: var(--color-surface-secondary);
+  }
+
+  .mobile-nav-link .arrow {
+    font-size: 1.5rem;
+    font-weight: 900;
   }
 </style>
 
@@ -117,10 +288,16 @@ import HeaderLink from './HeaderLink.astro'
     const toggleBtn = document.getElementById('theme-toggle');
     if (!toggleBtn) return;
 
-    const sunIcon = toggleBtn.querySelector('.sun-icon') as HTMLElement;
-    const moonIcon = toggleBtn.querySelector('.moon-icon') as HTMLElement;
+    // 이벤트 리스너 중복 방지를 위한 클론 기법 적용
+    const newToggleBtn = toggleBtn.cloneNode(true) as HTMLElement;
+    toggleBtn.parentNode?.replaceChild(newToggleBtn, toggleBtn);
+
+    // 교체되어 화면에 실제 렌더링된 newToggleBtn 내부에서 아이콘 취득
+    const sunIcon = newToggleBtn.querySelector('.sun-icon') as HTMLElement;
+    const moonIcon = newToggleBtn.querySelector('.moon-icon') as HTMLElement;
 
     const updateIcons = (theme: string) => {
+      if (!sunIcon || !moonIcon) return;
       if (theme === 'dark') {
         sunIcon.style.display = 'none';
         moonIcon.style.display = 'block';
@@ -134,21 +311,84 @@ import HeaderLink from './HeaderLink.astro'
     const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
     updateIcons(currentTheme);
 
-    toggleBtn.addEventListener('click', () => {
+    newToggleBtn.addEventListener('click', () => {
       const theme = document.documentElement.getAttribute('data-theme');
       const nextTheme = theme === 'dark' ? 'light' : 'dark';
+      console.log(`[Theme Toggle] Clicked. Current theme in DOM: "${theme}" -> Switching to: "${nextTheme}"`);
       
       document.documentElement.setAttribute('data-theme', nextTheme);
       localStorage.setItem('theme', nextTheme);
       updateIcons(nextTheme);
+      console.log(`[Theme Toggle] Successfully set DOM attribute: data-theme="${document.documentElement.getAttribute('data-theme')}"`);
     });
   }
 
-  // Astro View Transitions 및 일반 로드 대응
-  document.addEventListener('astro:page-load', setupThemeToggle);
-  if (document.readyState !== 'loading') {
+  function setupMobileMenu() {
+    const toggleBtn = document.getElementById('mobile-menu-toggle');
+    const menuDropdown = document.getElementById('mobile-menu-dropdown');
+    if (!toggleBtn || !menuDropdown) return;
+
+    // 페이지 진입/전환 시 메뉴 강제 초기화 (닫힘 상태)
+    menuDropdown.classList.remove('open');
+    const menuText = toggleBtn.querySelector('.menu-text') as HTMLElement;
+    if (menuText) {
+      menuText.innerText = 'MENU';
+    }
+    toggleBtn.style.background = '';
+
+    // 이벤트 리스너 중복 바인딩 방지를 위한 버튼 엘리먼트 클론 교체
+    const newToggleBtn = toggleBtn.cloneNode(true) as HTMLElement;
+    toggleBtn.parentNode?.replaceChild(newToggleBtn, toggleBtn);
+
+    const newMenuText = newToggleBtn.querySelector('.menu-text') as HTMLElement;
+
+    newToggleBtn.addEventListener('click', () => {
+      const isOpen = menuDropdown.classList.contains('open');
+      console.log(`[Mobile Menu] Clicked. Current state (isOpen): ${isOpen} -> Toggling menu`);
+      if (isOpen) {
+        menuDropdown.classList.remove('open');
+        if (newMenuText) {
+          newMenuText.innerText = 'MENU';
+        }
+        newToggleBtn.style.background = '';
+      } else {
+        menuDropdown.classList.add('open');
+        if (newMenuText) {
+          newMenuText.innerText = 'CLOSE';
+        }
+        newToggleBtn.style.background = 'var(--color-magenta)';
+      }
+      console.log(`[Mobile Menu] New state (isOpen): ${menuDropdown.classList.contains('open')}`);
+    });
+
+    // 화면 크기가 커지면 오버레이를 자동으로 닫음
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 640 && menuDropdown.classList.contains('open')) {
+        menuDropdown.classList.remove('open');
+        if (newMenuText) {
+          newMenuText.innerText = 'MENU';
+        }
+        newToggleBtn.style.background = '';
+      }
+    });
+  }
+
+  // Astro View Transitions 및 일반 브라우저 로딩(DOMContentLoaded)을 모두 아우르는 통합 초기화 진입점
+  document.addEventListener('astro:page-load', () => {
+    console.log('[Header JS] astro:page-load event fired. Initializing toggles.');
     setupThemeToggle();
+    setupMobileMenu();
+  });
+  
+  if (document.readyState !== 'loading') {
+    console.log('[Header JS] Document already ready (MPA). Initializing toggles.');
+    setupThemeToggle();
+    setupMobileMenu();
   } else {
-    document.addEventListener('DOMContentLoaded', setupThemeToggle);
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('[Header JS] DOMContentLoaded event fired (MPA). Initializing toggles.');
+      setupThemeToggle();
+      setupMobileMenu();
+    });
   }
 </script>

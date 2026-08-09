@@ -1,95 +1,108 @@
 @import 'katex/dist/katex.min.css';
 
 /* ============================================================
-   Design Tokens — Apple Style Light & Dark Colors
+   Design Tokens — Neo-Brutalist Styles
    ============================================================ */
 
 :root {
-  /* 라이트 테마 기본값 (JSON에 명시된 팔레트 기준) */
-  --color-bg:               rgb(255, 255, 255); /* #ffffff */
-  --color-surface:          rgb(250, 250, 252); /* #fafafc */
-  --color-surface-secondary:rgb(245, 245, 247); /* #f5f5f7 (parchment) */
-  --color-bg-header:        rgba(0, 0, 0, 0.85); /* oklab(0 0 0 / 0.85) */
-  --color-text-header:      rgb(213, 213, 218); /* #d5d5da */
-  --color-text-header-hover:rgb(255, 255, 255); /* #ffffff */
-  --color-border:           rgb(224, 224, 224); /* #e0e0e0 */
-  --color-border-hairline:  rgb(213, 213, 218); /* #d5d5da */
-  --color-text-primary:     rgb(29, 29, 31);    /* #1d1d1f */
-  --color-text-body:        rgb(51, 51, 51);     /* #333333 (더 선명하고 가독성 좋은 본문 색상) */
-  --color-text-secondary:   rgb(122, 122, 122);  /* #7a7a7a (보조 메타 데이터용) */
-  --color-accent:           rgb(0, 102, 204);   /* #0066cc */
-  --color-accent-hover:     rgb(0, 81, 163);    /* #0051a3 */
+  /* 글로벌 폰트 페이스 */
+  --font-sans: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* 라이트 테마 (기본: 베이지 테마 + 네오 브루탈리스트 시그니처 포인트) */
+  --color-bg:               #F5F5DC; /* paperBeige (종이베이지) */
+  --color-surface:          #FFFFFF; /* 카드 및 본문 배경 */
+  --color-surface-secondary:#FFD700; /* accentYellow (노랑) */
+  --color-bg-header:        #FFFFFF; /* 헤더 백그라운드 */
+  --color-text-header:      #000000;
+  --color-text-header-hover:#FF00FF; /* accentMagenta (자홍) */
+  --color-border:           #000000; /* 두꺼운 블랙 스트로크 */
+  --color-border-hairline:  #000000;
+  --color-text-primary:     #000000; /* black (블랙) */
+  --color-text-body:        #000000;
+  --color-text-secondary:   #333333;
+  --color-accent:           #00C2CB; /* accentTeal (청록) */
+  --color-accent-hover:     #FF00FF; /* accentMagenta (자홍) */
+  --color-magenta:          #FF00FF;
+  --color-yellow:           #FFD700;
+  --color-teal:             #00C2CB;
+  --color-paper:            #F5F5DC;
   
   /* 상태 색상 */
-  --color-success:          rgb(26, 122, 56);   /* #1a7a38 */
-  --color-error:            rgb(179, 64, 47);   /* #b3402f */
-  --color-warning:          rgb(201, 154, 16);  /* #c99a10 */
-  --color-badge-bg:         rgb(234, 243, 255); /* #eaf3ff */
+  --color-success:          #00C2CB;
+  --color-error:            #FF00FF;
+  --color-warning:          #FFD700;
+  --color-badge-bg:         #FFD700;
 
   /* 코드 블록 */
-  --code-bg:                #1a1b2e;
-  --code-radius:            10px;
+  --code-bg:                #000000;
+  --code-radius:            4px;
 
-  /* 폰트 정의 (Pretendard & Apple SF Font) */
-  --font-sans: "SF Pro Display", "SF Pro Text", "Pretendard Variable", Pretendard, system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-
-  --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-  --box-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --transition-speed: 0.25s;
-  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+  /* 네오 브루탈리즘 하드 섀도우 규격 */
+  --box-shadow: 4px 4px 0px #000000;
+  --box-shadow-hover: 8px 8px 0px #000000;
+  --transition-speed: 0.1s;
+  --transition-timing: ease;
 }
 
-/* 다크 테마 (HTML data-theme="dark" 일 때) */
-:root[data-theme="dark"] {
-  --color-bg:               rgb(0, 0, 0);       /* #000000 (OLED Black) */
-  --color-surface:          rgb(28, 28, 30);    /* #1c1c1e */
-  --color-surface-secondary:rgb(44, 44, 46);    /* #2c2c2e */
-  --color-bg-header:        rgba(15, 15, 17, 0.85); /* 다크 헤더 */
-  --color-text-header:      rgb(142, 142, 147); /* #8e8e93 */
-  --color-text-header-hover:rgb(245, 245, 247); /* #f5f5f7 */
-  --color-border:           rgb(56, 56, 58);    /* #38383a */
-  --color-border-hairline:  rgb(48, 48, 50);    /* #303032 */
-  --color-text-primary:     rgb(245, 245, 247);  /* #f5f5f7 */
-  --color-text-body:        rgb(213, 213, 218);  /* #d5d5da (더 선명하고 밝은 다크모드 본문 색상) */
-  --color-text-secondary:   rgb(142, 142, 147); /* #8e8e93 (보조 메타 데이터용) */
-  --color-accent:           rgb(10, 132, 255);  /* #0a84ff */
-  --color-accent-hover:     rgb(64, 156, 255);  /* #409cff */
+/* 다크 테마 (HTML data-theme="dark" 일 때: 네이비 차콜 + 네온 아이스블루 + 로즈레드 하이라이트) */
+html[data-theme="dark"] {
+  --color-bg:               #0B0F19; /* 깊고 어두운 네이비 차콜 */
+  --color-surface:          #172033; /* 짙은 스틸 블루 그레이 */
+  --color-surface-secondary:#0284C7; /* steelCyan (서브 액센트) */
+  --color-bg-header:        #080C14;
+  --color-text-header:      #F8FAFC;
+  --color-text-header-hover:#F43F5E; /* roseRed 하이라이트 */
+  --color-border:           #94A3B8; /* 눈이 편안한 실버 스틸 그레이 보더 */
+  --color-border-hairline:  #475569;
+  --color-text-primary:     #F8FAFC;
+  --color-text-body:        #E2E8F0;
+  --color-text-secondary:   #94A3B8;
+  --color-accent:           #38BDF8; /* iceBlue (메인 푸른 계열) */
+  --color-accent-hover:     #F43F5E; /* roseRed (붉은 계열 하이라이트) */
+  --color-magenta:          #F43F5E; /* 붉은 계열 */
+  --color-yellow:           #FB923C; /* 톤다운된 따뜻한 오렌지 */
+  --color-teal:             #0EA5E9;
+  --color-paper:            #0B0F19;
   
   /* 상태 색상 (Dark) */
-  --color-success:          rgb(48, 209, 88);   /* #30d158 */
-  --color-error:            rgb(255, 69, 58);   /* #ff453a */
-  --color-warning:          rgb(255, 214, 10);  /* #ffd60a */
-  --color-badge-bg:         rgba(10, 132, 255, 0.15);
+  --color-success:          #38BDF8;
+  --color-error:            #F43F5E;
+  --color-warning:          #FB923C;
+  --color-badge-bg:         #1E293B;
 
-  --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-  --box-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --box-shadow: 4px 4px 0px #94A3B8; /* 실버 그레이 하드 섀도우 */
+  --box-shadow-hover: 8px 8px 0px #94A3B8;
 }
 
-/* 시스템 설정 prefers-color-scheme 대응 (사용자가 테마를 수동 선택하지 않은 경우 기본 설정) */
+/* 시스템 설정 prefers-color-scheme 대응 */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]):not([data-theme="dark"]) {
-    --color-bg:               rgb(0, 0, 0);
-    --color-surface:          rgb(28, 28, 30);
-    --color-surface-secondary:rgb(44, 44, 46);
-    --color-bg-header:        rgba(15, 15, 17, 0.85);
-    --color-text-header:      rgb(142, 142, 147);
-    --color-text-header-hover:rgb(245, 245, 247);
-    --color-border:           rgb(56, 56, 58);
-    --color-border-hairline:  rgb(48, 48, 50);
-    --color-text-primary:     rgb(245, 245, 247);
-    --color-text-body:        rgb(213, 213, 218);
-    --color-text-secondary:   rgb(142, 142, 147);
-    --color-accent:           rgb(10, 132, 255);
-    --color-accent-hover:     rgb(64, 156, 255);
+  html:not([data-theme="light"]):not([data-theme="dark"]) {
+    --color-bg:               #0B0F19;
+    --color-surface:          #172033;
+    --color-surface-secondary:#0284C7;
+    --color-bg-header:        #080C14;
+    --color-text-header:      #F8FAFC;
+    --color-text-header-hover:#F43F5E;
+    --color-border:           #94A3B8;
+    --color-border-hairline:  #475569;
+    --color-text-primary:     #F8FAFC;
+    --color-text-body:        #E2E8F0;
+    --color-text-secondary:   #94A3B8;
+    --color-accent:           #38BDF8;
+    --color-accent-hover:     #F43F5E;
+    --color-magenta:          #F43F5E;
+    --color-yellow:           #FB923C;
+    --color-teal:             #0EA5E9;
+    --color-paper:            #0B0F19;
     
-    --color-success:          rgb(48, 209, 88);
-    --color-error:            rgb(255, 69, 58);
-    --color-warning:          rgb(255, 214, 10);
-    --color-badge-bg:         rgba(10, 132, 255, 0.15);
+    --color-success:          #38BDF8;
+    --color-error:            #F43F5E;
+    --color-warning:          #FB923C;
+    --color-badge-bg:         #1E293B;
     
-    --box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-    --box-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.6);
+    --box-shadow: 4px 4px 0px #94A3B8;
+    --box-shadow-hover: 8px 8px 0px #94A3B8;
   }
 }
 
@@ -105,9 +118,9 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-bg);
-  /* 부드러운 테마 전환 효과 */
   transition: background-color var(--transition-speed) var(--transition-timing);
-  overflow-y: scroll; /* 스크롤바 유무에 따른 레이아웃 시프트 방지 */
+  overflow-y: scroll;
+  height: 100%;
 }
 
 body {
@@ -121,161 +134,244 @@ body {
   overflow-wrap: break-word;
   transition: background-color var(--transition-speed) var(--transition-timing),
               color var(--transition-speed) var(--transition-timing);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex-grow: 1;
 }
 
 /* ============================================================
-   Typography (JSON 기준 최적화)
+   Typography — Loud & High Contrast
    ============================================================ */
 h1, h2, h3, h4, h5, h6 {
   color: var(--color-text-primary);
   font-family: var(--font-sans);
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  margin: 2rem 0 1rem;
-  transition: color var(--transition-speed) var(--transition-timing);
+  font-weight: 900; /* Bold Ninetieth percentile weight */
+  letter-spacing: -0.03em;
+  margin: 2.5rem 0 1.25rem;
+  text-transform: uppercase;
 }
 
 h1 {
-  font-size: 40px;
-  line-height: 46px;
-  letter-spacing: -0.6px;
+  font-size: 42px;
+  line-height: 1.1;
 }
 
 h2 {
   font-size: 32px;
-  line-height: 38px;
-  letter-spacing: -0.5px;
+  line-height: 1.2;
 }
 
 h3 {
-  font-size: 26px;
-  line-height: 38.22px;
-  letter-spacing: -0.4px;
+  font-size: 24px;
+  line-height: 1.3;
 }
 
 h4 {
-  font-size: 17px;
-  line-height: 24.99px;
-  letter-spacing: -0.3px;
+  font-size: 18px;
+  line-height: 1.4;
 }
 
 p {
   font-size: 17px;
-  font-weight: 400;
-  line-height: 27.2px;
-  letter-spacing: -0.2px;
+  font-weight: 500;
+  line-height: 1.7;
   color: var(--color-text-body);
-  margin: 0 0 1.25em;
-  transition: color var(--transition-speed) var(--transition-timing);
+  margin: 0 0 1.5em;
 }
 
 ul, ol {
-  margin: 0 0 1.25em;
+  margin: 0 0 1.5em;
   padding-left: 1.5rem;
 }
 
 li {
   font-size: 17px;
-  font-weight: 400;
-  line-height: 27.2px;
-  letter-spacing: -0.2px;
+  font-weight: 500;
+  line-height: 1.7;
   color: var(--color-text-body);
   margin-bottom: 0.5rem;
-  transition: color var(--transition-speed) var(--transition-timing);
-}
-
-li > ul, li > ol {
-  margin-top: 0.5rem;
-  margin-bottom: 0;
 }
 
 a {
-  color: var(--color-accent);
+  color: var(--color-text-primary);
   text-decoration: none;
-  font-weight: 600;
-  transition: color var(--transition-speed) var(--transition-timing),
-              opacity var(--transition-speed) var(--transition-timing);
-}
-a:hover {
-  color: var(--color-accent-hover);
+  font-weight: 700;
+  transition: all var(--transition-speed) var(--transition-timing);
 }
 
 strong, b {
-  font-weight: 600;
+  font-weight: 900;
 }
 
 hr {
   border: none;
-  border-top: 1px solid var(--color-border-hairline);
-  margin: 2.5rem 0;
+  border-top: 3px solid var(--color-border);
+  margin: 3rem 0;
 }
 
 blockquote {
-  border-left: 3px solid var(--color-accent);
-  padding: 0.5rem 0 0.5rem 1.25rem;
-  margin: 1.5rem 0;
-  color: var(--color-text-secondary);
-  font-style: normal; /* 현대적인 평평한 인용문 디자인 */
+  border-left: 6px solid var(--color-accent);
+  border: 3px solid var(--color-border);
+  box-shadow: 4px 4px 0px var(--color-border);
+  background-color: var(--color-surface);
+  padding: 1rem 1.5rem;
+  margin: 2rem 0;
+  color: var(--color-text-primary);
+  font-style: normal;
+  font-weight: 700;
 }
 
 img {
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  border: 3px solid var(--color-border);
+  box-shadow: 6px 6px 0px var(--color-border);
+  border-radius: 4px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1.5rem 0;
+  margin: 2rem 0;
+  border: 3px solid var(--color-border);
+  box-shadow: 6px 6px 0px var(--color-border);
+  background: var(--color-surface);
 }
+
 th, td {
-  padding: 0.6rem 0.8rem;
-  border: 1px solid var(--color-border-hairline);
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--color-border);
   text-align: left;
   font-size: 0.95rem;
+  font-weight: 700;
 }
+
 th {
-  background: var(--color-surface);
-  font-weight: 600;
+  background: var(--color-surface-secondary);
+  color: var(--color-text-primary);
 }
 
 /* ============================================================
-   Code Blocks — Tokyo Night (Shiki 적용)
+   Neo-Brutalist Custom Utilities
    ============================================================ */
-/* 인라인 코드 */
+.brutal-border {
+  border: 3px solid var(--color-border);
+}
+
+.brutal-border-sm {
+  border: 2px solid var(--color-border);
+}
+
+.brutal-shadow {
+  box-shadow: 4px 4px 0px var(--color-border);
+}
+
+.brutal-shadow-lg {
+  box-shadow: 8px 8px 0px var(--color-border);
+}
+
+.brutal-shadow-xl {
+  box-shadow: 12px 12px 0px var(--color-border);
+}
+
+.brutal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s ease;
+  border: 3px solid var(--color-border);
+  box-shadow: 4px 4px 0px var(--color-border);
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  padding: 0.6rem 1.2rem;
+  font-family: var(--font-sans);
+}
+
+.brutal-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--color-border);
+}
+
+.brutal-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--color-border);
+}
+
+/* Marquee Animation */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: 200%;
+  animation: marquee 15s linear infinite;
+}
+
+/* Focus State */
+*:focus-visible {
+  outline: 3px solid var(--color-magenta) !important;
+  outline-offset: 2px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+  border-left: 3px solid var(--color-border);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-primary);
+  border: 3px solid var(--color-bg);
+}
+
+/* ============================================================
+   Code Blocks — Brutalist Styled
+   ============================================================ */
 :not(pre) > code {
   font-family: var(--font-mono);
   font-size: 0.875em;
-  padding: 0.15em 0.4em;
+  padding: 0.12em 0.35em;
   border-radius: 4px;
-  background: var(--color-surface);
-  color: var(--color-accent);
-  border: 1px solid var(--color-border-hairline);
-  transition: background-color var(--transition-speed) var(--transition-timing),
-              border-color var(--transition-speed) var(--transition-timing);
+  background: rgba(135, 131, 120, 0.15);
+  color: #eb5757;
+  border: none;
+  font-weight: 600;
 }
 
-/* Shiki 코드 블록 컨테이너 */
+html[data-theme="dark"] :not(pre) > code {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ff7575;
+}
+
 pre {
   font-family: var(--font-mono);
   font-size: 0.9rem;
-  line-height: 1.6;
+  line-height: 1.2 !important;
   border-radius: var(--code-radius);
   padding: 1.25rem 1.5rem;
   overflow-x: auto;
-  border: 1px solid var(--color-border);
-  box-shadow: var(--box-shadow);
-  margin: 1.5rem 0;
-  position: relative; /* 자식 요소 절대 위치(absolute) 배치 기준점 설정 */
+  border: 3px solid var(--color-border);
+  box-shadow: 6px 6px 0px var(--color-border);
+  margin: 2rem 0;
+  position: relative;
+  background-color: #000000 !important;
 
-  /* 줄바꿈(Wrap) 및 강제 스크롤 비활성화 */
   white-space: pre-wrap !important;
   word-wrap: break-word !important;
   word-break: normal !important;
   overflow-wrap: break-word !important;
-
-  /* 라인 번호용 카운터 초기화 */
   counter-reset: line;
 }
 
@@ -284,15 +380,14 @@ pre > code {
   font-family: var(--font-mono);
 }
 
-/* 각 줄에 대한 스타일 설정 */
 pre code .line {
   display: block;
   position: relative;
-  padding-left: 2.75rem; /* 라인 번호 영역 확보 */
-  min-height: 1.5rem;
+  padding-left: 2.75rem;
+  min-height: unset !important;
+  line-height: 1.2 !important;
 }
 
-/* 라인 번호 표시 */
 pre code .line::before {
   counter-increment: line;
   content: counter(line);
@@ -300,91 +395,93 @@ pre code .line::before {
   left: 0;
   width: 1.75rem;
   text-align: right;
-  color: var(--color-text-secondary);
-  opacity: 0.4;
+  color: #888888;
+  opacity: 0.6;
   user-select: none;
   font-size: 0.8rem;
   font-family: var(--font-mono);
 }
 
-/* 언어 표시 헤더 바 (data-language 어트리뷰트가 있을 때 적용) */
 pre[data-language] {
   position: relative;
-  padding-top: 3rem; /* 헤더 바 공간 확보 */
+  padding-top: 3.25rem;
 }
 
-/* 헤더 바 배경 및 언어 이름 표시 */
 pre[data-language]::before {
   content: attr(data-language);
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 2.25rem;
-  line-height: 2.25rem;
-  padding: 0 4rem; /* 양옆 여백을 넓혀 버튼들과 겹침 방지 */
-  background: rgba(255, 255, 255, 0.03); /* 은은한 헤더 배경 */
-  border-bottom: 1px solid var(--color-border);
+  height: 2.5rem;
+  line-height: 2.5rem;
+  padding: 0 4rem;
+  background: #111111;
+  border-bottom: 3px solid var(--color-border);
   font-size: 0.75rem;
   font-family: var(--font-sans);
-  color: var(--color-text-secondary);
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-weight: 600;
-  text-align: center; /* 가로 가운데 정렬 */
+  font-weight: 900;
+  text-align: center;
   border-top-left-radius: calc(var(--code-radius) - 1px);
   border-top-right-radius: calc(var(--code-radius) - 1px);
-  pointer-events: none; /* 클릭 이벤트 통과 설정 */
+  pointer-events: none;
 }
 
-/* Mac 스타일 윈도우 컨트롤 버튼 (빨강, 노랑, 초록 점) */
 pre[data-language]::after {
   content: '';
   position: absolute;
-  top: 0.75rem;
+  top: 0.85rem;
   left: 1.25rem;
   width: 0.75rem;
   height: 0.75rem;
   border-radius: 50%;
   background: #ff5f56;
   box-shadow: 1.25rem 0 0 #ffbd2e, 2.5rem 0 0 #27c93f;
+  border: 1px solid #000;
 }
 
-/* 복사 버튼 스타일 */
 .copy-code-button {
   position: absolute;
-  top: 0.325rem;
+  top: 0.45rem;
   right: 0.75rem;
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 1.8rem;
+  height: 1.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: var(--color-text-secondary);
+  background: #222222;
+  border: 2px solid #ffffff;
+  border-radius: 4px;
+  color: #ffffff;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.1s ease;
   z-index: 10;
   padding: 0;
 }
 
 .copy-code-button:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--color-text-primary);
-  border-color: var(--color-border);
+  background: #333333;
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0px #ffffff;
+}
+
+.copy-code-button:active {
+  transform: translate(1px, 1px);
+  box-shadow: 0px 0px 0px #ffffff;
 }
 
 .copy-code-button.copied {
-  color: #27c93f; /* 완료 시 녹색 활성화 */
-  background: rgba(39, 201, 63, 0.1);
-  border-color: rgba(39, 201, 63, 0.2);
+  color: #27c93f;
+  background: #112211;
+  border-color: #27c93f;
 }
 
 .copy-code-button svg {
-  width: 0.9rem;
-  height: 0.9rem;
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 /* ============================================================
@@ -401,4 +498,3 @@ pre[data-language]::after {
   white-space: nowrap;
   border-width: 0;
 }
-

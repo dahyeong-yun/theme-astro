@@ -4,6 +4,10 @@ export interface SiteConfig {
   url: string
   author: string
   language: string
+  footerDescription?: string
+  heroDescription?: string
+  heroBadge?: string
+  marqueeText?: string[]
 }
 
 export interface ThemeConfig {
