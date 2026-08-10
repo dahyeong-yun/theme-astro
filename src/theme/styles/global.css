@@ -37,6 +37,7 @@
   /* 코드 블록 */
   --code-bg:                #000000;
   --code-radius:            4px;
+  --code-line-height:       1.5;   /* 에디터 기본값(VS Code ≈ 1.5)에 맞춤 */
 
   /* 네오 브루탈리즘 하드 섀도우 규격 */
   --box-shadow: 4px 4px 0px #000000;
@@ -358,7 +359,7 @@ html[data-theme="dark"] :not(pre) > code {
 pre {
   font-family: var(--font-mono);
   font-size: 0.9rem;
-  line-height: 1.2 !important;
+  line-height: var(--code-line-height) !important;
   border-radius: var(--code-radius);
   padding: 1.25rem 1.5rem;
   overflow-x: auto;
@@ -375,8 +376,12 @@ pre {
   counter-reset: line;
 }
 
+/* shiki 는 .line 스팬 사이에 개행 문자를 그대로 남긴다.
+   pre 가 white-space: pre-wrap 이라 그 개행이 빈 줄로 렌더링돼 줄간격이 두 배가 된다.
+   flex 컨테이너는 공백뿐인 텍스트 노드를 아이템으로 만들지 않으므로 빈 줄이 사라진다. */
 pre > code {
-  display: block;
+  display: flex;
+  flex-direction: column;
   font-family: var(--font-mono);
 }
 
@@ -385,7 +390,7 @@ pre code .line {
   position: relative;
   padding-left: 2.75rem;
   min-height: unset !important;
-  line-height: 1.2 !important;
+  line-height: var(--code-line-height) !important;
 }
 
 pre code .line::before {
