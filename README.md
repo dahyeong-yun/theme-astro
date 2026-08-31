@@ -199,6 +199,27 @@ draft: false
 그 줄이 통째로 엉성해 보인다. 활성 상태에서 글자 굵기를 바꾸지 않는 것도
 같은 이유다 — 굵어지면 칸 너비가 늘어 내비 전체가 미세하게 밀린다.
 
+## 검색·공유 (SEO)
+
+| | 상태 |
+| --- | --- |
+| `sitemap-index.xml` | `@astrojs/sitemap` 이 자동 생성 |
+| `robots.txt` | 테마가 생성. sitemap 위치를 함께 알린다. `seo.robots: false` 로 끌 수 있다 |
+| canonical URL | 모든 페이지 |
+| Open Graph / Twitter Card | `seo.openGraph`, `seo.twitterCard` |
+| RSS | `/rss.xml` |
+
+글 페이지는 `og:type: article` 과 `article:published_time` / `article:modified_time` 을
+함께 내보낸다. 목록·소개 페이지는 `website` 다.
+
+**설명문(description)** — frontmatter 에 적으면 그것을 쓰고, 없으면 본문 앞부분에서
+자동으로 뽑는다. 적지 않은 글이 모두 사이트 기본 설명으로 나가면 검색 결과와 공유
+카드에서 글끼리 구분되지 않기 때문이다. 직접 적은 문장이 언제나 더 낫다.
+
+**공유 카드 이미지** — `seo.defaultImage` 에 경로를 적으면 그 이미지를 쓴다.
+적지 않으면 이미지 태그를 아예 넣지 않는다. 없는 파일을 가리키면 카드가 깨진 채로
+공유되기 때문에, 비워 두는 편이 낫다.
+
 ## 백링크
 
 각 문서 하단에 그 문서를 `[[...]]` 로 가리키는 문서 목록이 자동으로 붙는다.

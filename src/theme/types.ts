@@ -51,6 +51,14 @@ export interface AnalyticsConfig {
 export interface SeoConfig {
   openGraph?: boolean
   twitterCard?: 'summary' | 'summary_large_image'
+  /**
+   * 공유 카드 기본 이미지. 사이트 루트 기준 경로(예: '/og-default.png').
+   * 지정하지 않으면 이미지 태그를 넣지 않는다 —
+   * 없는 파일을 가리키면 카드가 깨진 채로 공유된다.
+   */
+  defaultImage?: string
+  /** robots.txt 를 만들지 여부. 기본값 true */
+  robots?: boolean
 }
 
 export interface WikiConfig {

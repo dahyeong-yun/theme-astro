@@ -58,6 +58,9 @@ const wikiName = pageHeading(wikiBase, { title: config.wiki?.title ?? 'Wiki' }).
     <BaseHead
       title={`${title} | ${wikiName} | ${config.site.title}`}
       description={description ?? config.site.description}
+      type="article"
+      publishedTime={created ?? gitCreated}
+      modifiedTime={updated}
     />
     <style>
       .prose {

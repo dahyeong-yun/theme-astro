@@ -82,6 +82,12 @@ export function blogTheme(config: BlogConfig): AstroIntegration {
           pattern: '/rss.xml',
           entrypoint: themePage('rss.xml.js'),
         })
+        if (config.seo?.robots !== false) {
+          injectRoute({
+            pattern: '/robots.txt',
+            entrypoint: themePage('robots.txt.ts'),
+          })
+        }
         injectRoute({
           pattern: '/series',
           entrypoint: themePage('series/index.astro'),

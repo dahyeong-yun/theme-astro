@@ -23,7 +23,13 @@ const { title, description, date, updated, banner, headings = [], series, id, gi
 
 <html lang={config.site.language}>
   <head>
-    <BaseHead title={`${title} | ${config.site.title}`} description={description ?? config.site.description} />
+    <BaseHead
+      title={`${title} | ${config.site.title}`}
+      description={description ?? config.site.description}
+      type="article"
+      publishedTime={gitCreated ?? date}
+      modifiedTime={updated}
+    />
     <style>
       .hero-image {
         width: 100%;

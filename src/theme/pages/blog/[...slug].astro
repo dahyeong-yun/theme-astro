@@ -2,6 +2,7 @@
 import { type CollectionEntry, getCollection, render } from 'astro:content';
 import BlogPost from '../../layouts/BlogPost.astro';
 import { getGitCreated } from '../../lib/git-dates.js';
+import { excerpt } from '../../lib/excerpt.js';
 
 export async function getStaticPaths() {
 	const posts = await getCollection('posts');
@@ -23,9 +24,11 @@ type Props = CollectionEntry<'posts'>;
 const post = Astro.props;
 const { Content, headings } = await render(post);
 const gitCreated = getGitCreated((post as any).filePath);
+// frontmatter 에 description 이 없으면 본문 앞부분을 요약문으로 쓴다.
+const description = post.data.description ?? excerpt((post as any).body);
 ---
 
-<BlogPost {...post.data} id={post.id} headings={headings} gitCreated={gitCreated}>
+<BlogPost {...post.data} description={description} id={post.id} headings={headings} gitCreated={gitCreated}>
 	<Content />
 </BlogPost>
 

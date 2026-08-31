@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content'
 import WikiPage from '../../layouts/WikiPage.astro'
 import { getGitCreated } from '../../lib/git-dates.js'
+import { excerpt } from '../../lib/excerpt.js'
 
 export async function getStaticPaths() {
   let pages: any[] = []
@@ -25,10 +26,12 @@ export async function getStaticPaths() {
 const page = Astro.props as any
 const { Content, headings } = await render(page)
 const gitCreated = getGitCreated(page.filePath)
+const description = page.data.description ?? excerpt(page.body)
 ---
 
 <WikiPage
   {...page.data}
+  description={description}
   id={page.id}
   headings={headings}
   gitCreated={gitCreated}

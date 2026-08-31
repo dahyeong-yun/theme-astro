@@ -7,11 +7,24 @@ interface Props {
   title: string
   description: string
   image?: ImageMetadata
+  /** 글이면 'article'. 목록·소개 페이지는 'website' */
+  type?: 'website' | 'article'
+  publishedTime?: Date
+  modifiedTime?: Date
 }
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site)
-const { title, description, image } = Astro.props
-const ogImage = image ? new URL(image.src, Astro.url) : new URL('/og-default.jpg', Astro.site)
+const { title, description, image, type = 'website', publishedTime, modifiedTime } = Astro.props
+
+// 공유 카드 이미지: 글에 배너가 있으면 그것을, 없으면 설정한 기본 이미지를 쓴다.
+// 기본 이미지를 두지 않았다면 아예 태그를 넣지 않는다.
+// 없는 파일을 가리키면 카드가 깨진 채로 공유된다.
+const fallbackOgImage = config.seo?.defaultImage
+const ogImage = image
+  ? new URL(image.src, Astro.site)
+  : fallbackOgImage
+    ? new URL(fallbackOgImage, Astro.site)
+    : undefined
 
 const gtmId = config.analytics?.gtm?.id
 const gaId = config.analytics?.ga?.id
@@ -42,7 +55,6 @@ const shouldLoadGa = gaId && (config.analytics?.ga?.includeInDevelopment || !isD
 <title>{title}</title>
 <meta name="description" content={description} />
 <meta name="author" content={config.site.author} />
-<html lang={config.site.language} />
 
 <script is:inline>
   (function() {
@@ -60,22 +72,31 @@ const shouldLoadGa = gaId && (config.analytics?.ga?.includeInDevelopment || !isD
 <!-- Open Graph -->
 {config.seo?.openGraph && (
   <>
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content={Astro.url} />
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={config.site.title} />
+    <meta property="og:locale" content={config.site.language === 'ko' ? 'ko_KR' : config.site.language} />
+    <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={ogImage} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    {type === 'article' && publishedTime && (
+      <meta property="article:published_time" content={publishedTime.toISOString()} />
+    )}
+    {type === 'article' && modifiedTime && (
+      <meta property="article:modified_time" content={modifiedTime.toISOString()} />
+    )}
+    {type === 'article' && <meta property="article:author" content={config.site.author} />}
   </>
 )}
 
 <!-- Twitter Card -->
 {config.seo?.twitterCard && (
   <>
-    <meta name="twitter:card" content={config.seo.twitterCard} />
-    <meta name="twitter:url" content={Astro.url} />
+    <meta name="twitter:card" content={ogImage ? config.seo.twitterCard : 'summary'} />
+    <meta name="twitter:url" content={canonicalURL} />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={ogImage} />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
   </>
 )}
 
