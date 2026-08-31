@@ -1,17 +1,45 @@
 ---
+/**
+ * 날짜 표기: YYYY-MM-DD HH:mm:ss
+ *
+ * 정적 빌드라 빌드 머신의 시간대에 따라 결과가 달라지면 곤란하다.
+ * (로컬은 KST, GitHub Actions 는 UTC) 그래서 시간대를 명시적으로 고정한다.
+ * blog.config 의 site.timeZone 으로 바꿀 수 있고, 지정하지 않으면 UTC 다.
+ *
+ * frontmatter 에 `date: 2026-08-30` 처럼 날짜만 쓰면 UTC 자정으로 해석되어
+ * 00:00:00 으로 나온다. 시각까지 남기고 싶으면 `date: 2026-08-30 21:30:00` 으로 쓴다.
+ */
+import config from 'virtual:blog-config'
+
 interface Props {
-	date: Date;
+  date: Date
+  /** 이 표기에만 다른 시간대를 쓰고 싶을 때 */
+  timeZone?: string
 }
 
-const { date } = Astro.props;
+const { date, timeZone } = Astro.props
+const zone = timeZone ?? config.site.timeZone ?? 'UTC'
+
+const parts = new Intl.DateTimeFormat('en-CA', {
+  timeZone: zone,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+})
+  .formatToParts(date)
+  .reduce<Record<string, string>>((acc, part) => {
+    acc[part.type] = part.value
+    return acc
+  }, {})
+
+// hour12: false 인데도 자정을 '24' 로 주는 환경이 있어 눌러 준다.
+const hour = parts.hour === '24' ? '00' : parts.hour
+
+const formatted = `${parts.year}-${parts.month}-${parts.day} ${hour}:${parts.minute}:${parts.second}`
 ---
 
-<time datetime={date.toISOString()}>
-	{
-		date.toLocaleDateString('en-us', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
-		})
-	}
-</time>
+<time datetime={date.toISOString()}>{formatted}</time>

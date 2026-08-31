@@ -4,6 +4,7 @@ import config from 'virtual:blog-config';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import BaseHead from '../../components/BaseHead.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
 
 const posts = await getCollection('posts');
 const seriesPosts = posts.filter((p) => !p.data.draft && p.data.series);
@@ -48,13 +49,7 @@ const seriesList = Array.from(seriesMap.entries()).map(([name, data]) => {
   };
 }).sort((a, b) => b.lastUpdated.valueOf() - a.lastUpdated.valueOf());
 
-function formatDate(date: Date) {
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
+
 ---
 
 <!doctype html>
@@ -160,7 +155,7 @@ function formatDate(date: Date) {
               </div>
               <div class="series-card-footer">
                 <span class="post-count">{series.postCount}개의 글</span>
-                <span class="last-updated">최근 업데이트: {formatDate(series.lastUpdated)}</span>
+                <span class="last-updated">최근 업데이트: <FormattedDate date={series.lastUpdated} /></span>
               </div>
             </a>
           ))}

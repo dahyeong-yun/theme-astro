@@ -4,6 +4,11 @@ export interface SiteConfig {
   url: string
   author: string
   language: string
+  /**
+   * 날짜 표기에 쓰는 시간대(IANA 이름, 예: 'Asia/Seoul').
+   * 지정하지 않으면 UTC. 빌드 머신의 시간대에 결과가 흔들리지 않도록 고정해 둔다.
+   */
+  timeZone?: string
 }
 
 export interface ThemeConfig {

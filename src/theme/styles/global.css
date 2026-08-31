@@ -29,6 +29,7 @@
   /* 코드 블록 */
   --code-bg:                #1a1b2e;
   --code-radius:            10px;
+  --code-line-height:       1.5;   /* 에디터 기본값(VS Code ≈ 1.5)에 맞춤 */
 
   /* 폰트 정의 (Pretendard & Apple SF Font) */
   --font-sans: "SF Pro Display", "SF Pro Text", "Pretendard Variable", Pretendard, system-ui, -apple-system, sans-serif;
@@ -286,7 +287,7 @@ th {
 pre {
   font-family: var(--font-mono);
   font-size: 0.9rem;
-  line-height: 1.6;
+  line-height: var(--code-line-height);
   border-radius: var(--code-radius);
   padding: 1.25rem 1.5rem;
   overflow-x: auto;
@@ -305,8 +306,14 @@ pre {
   counter-reset: line;
 }
 
+/* shiki 는 .line 스팬 사이에 개행 문자를 그대로 남긴다.
+   pre 가 white-space: pre-wrap 이라 그 개행이 빈 줄로 렌더링돼,
+   블록 요소인 .line 의 줄바꿈 위에 얹혀 줄간격이 두 배로 보인다.
+   flex 컨테이너는 공백뿐인 텍스트 노드를 아이템으로 만들지 않으므로
+   pre-wrap 의 줄바꿈은 유지한 채 빈 줄만 사라진다. */
 pre > code {
-  display: block;
+  display: flex;
+  flex-direction: column;
   font-family: var(--font-mono);
 }
 
@@ -315,7 +322,10 @@ pre code .line {
   display: block;
   position: relative;
   padding-left: 2.75rem; /* 라인 번호 영역 확보 */
-  min-height: 1.5rem;
+  line-height: var(--code-line-height);
+  /* 빈 줄은 내용이 없어 flex 아이템 높이가 0 이 된다.
+     코드 안의 빈 줄도 한 줄로 보이도록 한 줄 높이를 보장한다. */
+  min-height: calc(1em * var(--code-line-height));
 }
 
 /* 라인 번호 표시 */
