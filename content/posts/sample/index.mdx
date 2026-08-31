@@ -1,0 +1,37 @@
+---
+title: 테마 미리보기용 샘플 포스트
+date: 2026-08-01
+description: 위키링크·백링크가 어떻게 그려지는지 확인하기 위한 개발용 더미 글입니다.
+tags: [sample]
+aliases: [샘플 포스트]
+---
+
+이 파일은 테마 개발 미리보기용 더미 콘텐츠입니다. 실제 글이 아닙니다.
+
+## 위키링크 문법
+
+일반 링크: [[optimistic-locking]]
+
+별칭 링크: [[optimistic-locking|낙관적 락]]
+
+헤딩까지: [[isolation-level#격리 수준의 종류]]
+
+전체 경로로: [[concepts/isolation-level]]
+
+별칭(frontmatter aliases)으로: [[격리 수준]]
+
+임베드 표기는 링크로 낮춰 렌더링합니다: ![[astro]]
+
+없는 문서로 거는 링크: [[존재하지 않는 문서]]
+
+## 링크로 바뀌지 않아야 하는 곳
+
+인라인 코드 안: `[[optimistic-locking]]`
+
+코드 블록 안:
+
+```md
+[[optimistic-locking]]
+```
+
+이미 링크인 곳 안: [텍스트 [[optimistic-locking]] 포함](https://example.com)

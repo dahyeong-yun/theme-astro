@@ -7,6 +7,8 @@ export const blogPostSchema = z.object({
   description: z.string().optional(),
   tags: z.array(z.string()).default([]),
   banner: z.string().optional(),  // public/ 경로 또는 URL
+  // 위키링크에서 이 글을 부를 수 있는 다른 이름들
+  aliases: z.array(z.string()).default([]),
   draft: z.boolean().default(false),
   slug: z.string().optional(),
   series: z.string().optional(),

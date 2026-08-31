@@ -19,8 +19,13 @@ const devConfig = {
   },
   navigation: [
     { title: 'Blog', href: '/blog' },
+    { title: 'Wiki', href: '/wiki' },
     { title: 'About', href: '/about' },
   ],
+  wiki: {
+    title: 'Wiki',
+    description: '정리해 둔 정보성 문서 모음. 계속 고쳐 씁니다.',
+  },
   analytics: {},
   seo: {
     openGraph: true,

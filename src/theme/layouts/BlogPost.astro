@@ -8,6 +8,8 @@ import FormattedDate from '../components/FormattedDate.astro'
 import Header from '../components/Header.astro'
 import TableOfContents from '../components/TableOfContents.astro'
 import SeriesBox from '../components/SeriesBox.astro'
+import Backlinks from '../components/Backlinks.astro'
+import CodeCopyScript from '../components/CodeCopyScript.astro'
 
 type Props = CollectionEntry<'posts'>['data'] & {
   headings?: { depth: number; slug: string; text: string }[];
@@ -134,6 +136,7 @@ const { title, description, date, banner, headings = [], series, id, lastModifie
             </div>
           )}
           <slot />
+          {id && <Backlinks kind="post" id={id} />}
         </div>
       </article>
       {headings.length > 0 && (
@@ -143,67 +146,6 @@ const { title, description, date, banner, headings = [], series, id, lastModifie
       )}
     </main>
     <Footer />
-    <script>
-      function setupCopyButtons() {
-        const codeBlocks = document.querySelectorAll('pre');
-        
-        codeBlocks.forEach((codeBlock) => {
-          // 중복 생성 방지
-          if (codeBlock.querySelector('.copy-code-button')) return;
-          
-          const button = document.createElement('button');
-          button.className = 'copy-code-button';
-          button.type = 'button';
-          button.setAttribute('aria-label', 'Copy code to clipboard');
-          
-          // SVG 아이콘 주입 (기본 복사 아이콘 및 완료 체크 아이콘)
-          button.innerHTML = `
-            <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          `;
-          
-          codeBlock.appendChild(button);
-          
-          button.addEventListener('click', async () => {
-            const codeElement = codeBlock.querySelector('code');
-            if (!codeElement) return;
-            
-            // 행 번호나 다른 요소를 제외하고 순수한 텍스트 복사
-            const text = codeElement.textContent || '';
-            
-            try {
-              await navigator.clipboard.writeText(text);
-              
-              const copyIcon = button.querySelector('.copy-icon') as HTMLElement;
-              const checkIcon = button.querySelector('.check-icon') as HTMLElement;
-              
-              if (copyIcon && checkIcon) {
-                copyIcon.style.display = 'none';
-                checkIcon.style.display = 'inline';
-                button.classList.add('copied');
-                
-                setTimeout(() => {
-                  copyIcon.style.display = 'inline';
-                  checkIcon.style.display = 'none';
-                  button.classList.remove('copied');
-                }, 2000);
-              }
-            } catch (err) {
-              console.error('Failed to copy code: ', err);
-            }
-          });
-        });
-      }
-
-      // 최초 로드 및 Astro 페이지 전환 시 작동하도록 이벤트 리스너 등록
-      document.addEventListener('astro:page-load', setupCopyButtons);
-      
-      // View transitions를 사용하지 않거나 초기 로딩 대응
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupCopyButtons);
-      } else {
-        setupCopyButtons();
-      }
-    </script>
+    <CodeCopyScript />
   </body>
 </html>

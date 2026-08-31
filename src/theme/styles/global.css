@@ -204,6 +204,32 @@ strong, b {
   font-weight: 600;
 }
 
+/* ============================================================
+   Wikilinks — [[문서]] 로 만들어진 문서 간 링크
+   ============================================================ */
+/* 본문의 일반 링크와 구분되도록 은은한 밑줄을 깔아둔다.
+   문서 사이 이동이라는 성격이 읽는 도중에도 보이게 하기 위한 것이다. */
+a.wikilink {
+  font-weight: 500;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+  transition: color var(--transition-speed) var(--transition-timing),
+              border-color var(--transition-speed) var(--transition-timing);
+}
+a.wikilink:hover {
+  border-bottom-color: var(--color-accent-hover);
+}
+
+/* .wikilink-post / .wikilink-wiki 는 링크가 가리키는 문서 종류다.
+   기본값은 둘을 같게 두되, 구분해 보이고 싶으면 여기서 갈라 쓰면 된다. */
+
+/* 아직 대상 문서가 없는 링크 — 눈에 띄되 클릭은 되지 않는다 */
+.wikilink-broken {
+  color: var(--color-error);
+  border-bottom: 1px dashed var(--color-error);
+  cursor: help;
+  opacity: 0.85;
+}
+
 hr {
   border: none;
   border-top: 1px solid var(--color-border-hairline);

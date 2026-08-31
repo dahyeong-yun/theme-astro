@@ -1,9 +1,9 @@
 ---
 import { getCollection } from 'astro:content';
 import config from 'virtual:blog-config';
-import Header from '../../theme/components/Header.astro';
-import Footer from '../../theme/components/Footer.astro';
-import BaseHead from '../../theme/components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import BaseHead from '../../components/BaseHead.astro';
 
 const posts = await getCollection('posts');
 const seriesPosts = posts.filter((p) => !p.data.draft && p.data.series);

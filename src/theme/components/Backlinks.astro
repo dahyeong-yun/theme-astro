@@ -1,0 +1,108 @@
+---
+/**
+ * 이 문서를 [[위키링크]]로 가리키는 다른 문서 목록.
+ * 걸린 문서가 없으면 아무것도 그리지 않는다.
+ */
+import { getBacklinks } from '../lib/collection-docs.js'
+import type { DocKind } from '../lib/wikilink.js'
+
+interface Props {
+  kind: DocKind
+  /** 컬렉션 엔트리 id (예: 'java-spring/stack-vs-chm/index') */
+  id: string
+}
+
+const { kind, id } = Astro.props
+const backlinks = await getBacklinks(kind, id)
+---
+
+{backlinks.length > 0 && (
+  <section class="backlinks" aria-labelledby="backlinks-heading">
+    <h2 id="backlinks-heading">이 문서를 참조하는 글</h2>
+    <ul>
+      {backlinks.map((doc) => (
+        <li>
+          <a href={doc.url}>
+            <span class={`backlink-kind backlink-kind-${doc.kind}`}>
+              {doc.kind === 'post' ? 'Post' : 'Wiki'}
+            </span>
+            <span class="backlink-title">{doc.title}</span>
+          </a>
+          {doc.description && <p class="backlink-desc">{doc.description}</p>}
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
+
+<style>
+  .backlinks {
+    margin-top: 3.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--color-border);
+  }
+  .backlinks h2 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    margin: 0 0 1rem 0;
+  }
+  .backlinks ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .backlinks li {
+    margin: 0;
+  }
+  .backlinks a {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    text-decoration: none;
+    color: var(--color-text-primary);
+    font-size: 0.98rem;
+    font-weight: 500;
+    line-height: 1.45;
+  }
+  .backlinks a:hover .backlink-title {
+    color: var(--color-accent);
+  }
+  .backlink-kind {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.12rem 0.4rem;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+  }
+  .backlink-kind-wiki {
+    background: var(--color-badge-bg);
+    border-color: transparent;
+    color: var(--color-accent);
+  }
+  .backlink-title {
+    min-width: 0;
+    transition: color 0.15s;
+  }
+  .backlink-desc {
+    margin: 0.25rem 0 0 0;
+    padding-left: 3.1rem;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+  @media (max-width: 640px) {
+    .backlink-desc {
+      padding-left: 0;
+    }
+  }
+</style>

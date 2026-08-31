@@ -1,0 +1,35 @@
+---
+import { getCollection, render } from 'astro:content'
+import WikiPage from '../../layouts/WikiPage.astro'
+
+export async function getStaticPaths() {
+  let pages: any[] = []
+  try {
+    pages = (await getCollection('wiki' as any)) ?? []
+  } catch {
+    // wiki 컬렉션을 정의하지 않은 프로젝트에서는 라우트를 만들지 않는다.
+    return []
+  }
+
+  return pages
+    .filter((page) => !page.data.draft)
+    .map((page) => {
+      const slug = page.data.slug
+        ? page.data.slug.replace(/^\/|\/$/g, '')
+        : page.id.replace(/\/index$/, '')
+      return { params: { slug }, props: page }
+    })
+}
+
+const page = Astro.props as any
+const { Content, headings, remarkPluginFrontmatter } = await render(page)
+---
+
+<WikiPage
+  {...page.data}
+  id={page.id}
+  headings={headings}
+  lastModified={remarkPluginFrontmatter?.lastModified}
+>
+  <Content />
+</WikiPage>

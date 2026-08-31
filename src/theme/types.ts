@@ -37,10 +37,30 @@ export interface SeoConfig {
   twitterCard?: 'summary' | 'summary_large_image'
 }
 
+export interface WikiConfig {
+  /** 위키 라우트(/wiki) 활성화 여부. 기본값 true */
+  enabled?: boolean
+  /** URL 접두사. 기본값 '/wiki' */
+  basePath?: string
+  /** 콘텐츠 디렉터리. 프로젝트 루트 기준 상대 경로. 기본값 'content/wiki' */
+  contentDir?: string
+  /** 위키 인덱스 페이지 제목. 기본값 'Wiki' */
+  title?: string
+  /** 위키 인덱스 페이지 설명 */
+  description?: string
+}
+
+export interface ContentConfig {
+  /** 포스트 콘텐츠 디렉터리. 기본값 'content/posts' */
+  postsDir?: string
+}
+
 export interface BlogConfig {
   site: SiteConfig
   theme: ThemeConfig
   navigation: NavItem[]
   analytics?: AnalyticsConfig
   seo?: SeoConfig
+  content?: ContentConfig
+  wiki?: WikiConfig
 }
