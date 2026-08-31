@@ -6,7 +6,8 @@ import config from 'virtual:blog-config'
 interface Props {
   title: string
   description: string
-  image?: ImageMetadata
+  /** 공유 카드 이미지. 사이트 루트 기준 경로 문자열 또는 가져온 이미지 */
+  image?: ImageMetadata | string
   /** 글이면 'article'. 목록·소개 페이지는 'website' */
   type?: 'website' | 'article'
   publishedTime?: Date
@@ -16,15 +17,21 @@ interface Props {
 const canonicalURL = new URL(Astro.url.pathname, Astro.site)
 const { title, description, image, type = 'website', publishedTime, modifiedTime } = Astro.props
 
-// 공유 카드 이미지: 글에 배너가 있으면 그것을, 없으면 설정한 기본 이미지를 쓴다.
-// 기본 이미지를 두지 않았다면 아예 태그를 넣지 않는다.
-// 없는 파일을 가리키면 카드가 깨진 채로 공유된다.
-const fallbackOgImage = config.seo?.defaultImage
-const ogImage = image
-  ? new URL(image.src, Astro.site)
-  : fallbackOgImage
-    ? new URL(fallbackOgImage, Astro.site)
-    : undefined
+// 공유 카드 이미지: 글이 지정한 것 → 사이트 기본 이미지 순.
+// 둘 다 없으면 태그를 아예 넣지 않는다. 없는 파일을 가리키면 카드가 깨진 채로 공유된다.
+// 크롤러는 상대 경로를 읽지 못하므로 반드시 절대 URL 로 만든다.
+function toAbsolute(value: ImageMetadata | string | undefined): URL | undefined {
+  if (!value) return undefined
+  const src = typeof value === 'string' ? value : value.src
+  if (!src) return undefined
+  try {
+    return new URL(src, Astro.site)
+  } catch {
+    return undefined
+  }
+}
+
+const ogImage = toAbsolute(image) ?? toAbsolute(config.seo?.defaultImage)
 
 const gtmId = config.analytics?.gtm?.id
 const gaId = config.analytics?.ga?.id

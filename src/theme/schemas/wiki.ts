@@ -19,6 +19,8 @@ export const wikiPageSchema = z.object({
   status: z.enum(['seed', 'growing', 'evergreen']).optional(),
   draft: z.boolean().default(false),
   slug: z.string().optional(),
+  /** 공유 카드 전용 이미지. 없으면 seo.defaultImage */
+  ogImage: z.string().optional(),
 })
 
 export type WikiPage = z.infer<typeof wikiPageSchema>

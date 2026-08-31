@@ -18,7 +18,7 @@ type Props = CollectionEntry<'posts'>['data'] & {
   gitCreated?: Date;
 }
 
-const { title, description, date, updated, banner, headings = [], series, id, gitCreated } = Astro.props
+const { title, description, date, updated, banner, ogImage, headings = [], series, id, gitCreated } = Astro.props
 ---
 
 <html lang={config.site.language}>
@@ -26,6 +26,7 @@ const { title, description, date, updated, banner, headings = [], series, id, gi
     <BaseHead
       title={`${title} | ${config.site.title}`}
       description={description ?? config.site.description}
+      image={ogImage ?? banner}
       type="article"
       publishedTime={gitCreated ?? date}
       modifiedTime={updated}

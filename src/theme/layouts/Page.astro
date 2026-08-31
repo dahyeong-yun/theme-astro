@@ -16,9 +16,11 @@ interface Props {
   title: string
   description?: string
   eyebrow?: string
+  /** 공유 카드 이미지. 없으면 seo.defaultImage */
+  image?: string
 }
 
-const { title, description, eyebrow } = Astro.props
+const { title, description, eyebrow, image } = Astro.props
 ---
 
 <!doctype html>
@@ -27,6 +29,7 @@ const { title, description, eyebrow } = Astro.props
     <BaseHead
       title={`${title} | ${config.site.title}`}
       description={description ?? config.site.description}
+      image={image}
     />
   </head>
   <body>

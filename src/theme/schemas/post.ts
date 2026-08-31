@@ -9,6 +9,8 @@ export const blogPostSchema = z.object({
   description: z.string().optional(),
   tags: z.array(z.string()).default([]),
   banner: z.string().optional(),  // public/ 경로 또는 URL
+  // 공유 카드 전용 이미지. 적지 않으면 banner 를, 그것도 없으면 seo.defaultImage 를 쓴다.
+  ogImage: z.string().optional(),
   // 위키링크에서 이 글을 부를 수 있는 다른 이름들
   aliases: z.array(z.string()).default([]),
   draft: z.boolean().default(false),

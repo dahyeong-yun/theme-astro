@@ -12,6 +12,8 @@ export const pageSchema = z.object({
   /** 적으면 navigation 의 description 보다 우선한다 */
   description: z.string().optional(),
   draft: z.boolean().default(false),
+  /** 공유 카드 전용 이미지. 없으면 seo.defaultImage */
+  ogImage: z.string().optional(),
 })
 
 export type StandalonePage = z.infer<typeof pageSchema>
