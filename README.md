@@ -180,11 +180,19 @@ draft: false
 
 | 요소 | 담당 |
 | --- | --- |
-| 바깥 여백·폭 | `.page` (global.css) |
+| 읽기 폭 | `--content-width` (global.css) |
+| 바깥 여백·폭 | `.page` / `.doc-layout` (global.css) |
 | 제목·설명 | `PageHeader.astro` → `.page-head` |
 | 묶음 제목 | `.section-title` |
 | 문서 줄 목록 | `DocList.astro` → `.doc-list` |
 | 쪽 이동 | `Pagination.astro` |
+
+목록 페이지(`.page`)와 글 페이지(`.doc-layout`)는 같은 `--content-width` 를 쓴다.
+목록에서 글로 들어갈 때 글 상자가 좌우로 흔들리면 안 되기 때문이다.
+목차를 본문과 나란히 놓고 둘을 함께 가운데 정렬하면 목차 너비의 절반만큼 본문이
+밀리므로, `.doc-layout` 은 가운데 칸에 본문을 두고 양옆을 같은 비율로 벌린 뒤
+목차를 오른쪽 여백에 얹는다. 오른쪽 여백이 목차를 담지 못하는 폭(1180px 이하)
+부터는 목차가 본문 위로 접혀 들어간다.
 
 헤더 안의 조작 요소(내비 링크, 테마 토글)는 `--header-control-size` /
 `--header-control-radius` 를 공유한다. 하나만 원형이거나 하나만 각지면

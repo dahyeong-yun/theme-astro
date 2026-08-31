@@ -29,6 +29,13 @@
   --color-warning:          rgb(201, 154, 16);  /* #c99a10 */
   --color-badge-bg:         rgb(234, 243, 255); /* #eaf3ff */
 
+  /* 읽기 폭 — 목록과 본문이 공유한다.
+     목록에서 글로 들어갈 때 글 상자가 좌우로 흔들리면 안 된다. */
+  --content-width:          720px;
+  --content-gutter:         1.5rem;
+  --toc-width:              200px;
+  --toc-gap:                1.75rem;
+
   /* 코드 블록 */
   --code-bg:                #1a1b2e;
   --code-radius:            10px;
@@ -452,14 +459,68 @@ pre[data-language]::after {
    구조는 여기 한 곳에서만 정한다.
    ============================================================ */
 .page {
-  max-width: 860px;
+  max-width: calc(var(--content-width) + var(--content-gutter) * 2);
   margin: 0 auto;
-  padding: 3rem 1.5rem 5rem;
+  padding: 3rem var(--content-gutter) 5rem;
 }
 
 @media (max-width: 640px) {
   .page {
     padding: 2rem 1rem 3.5rem;
+  }
+}
+
+/* ------------------------------------------------------------
+   본문 + 목차 레이아웃 (글 상세, 위키 문서)
+
+   목차를 본문과 나란히 놓고 둘을 함께 가운데 정렬하면, 목차 너비의 절반만큼
+   본문이 왼쪽으로 밀린다. 목록 페이지와 글 페이지의 좌우가 어긋나는 이유다.
+   가운데 칸에 본문을 두고 양옆을 같은 비율로 벌리면, 목차가 있든 없든
+   본문은 늘 같은 자리에 온다. 목차는 오른쪽 여백에 얹힌다.
+   ------------------------------------------------------------ */
+.doc-layout {
+  display: grid;
+  grid-template-columns:
+    minmax(var(--content-gutter), 1fr)
+    minmax(0, var(--content-width))
+    minmax(var(--content-gutter), 1fr);
+  padding: 3rem 0 5rem;
+}
+
+.doc-main {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.doc-aside {
+  grid-column: 3;
+  width: var(--toc-width);
+  margin-left: var(--toc-gap);
+}
+
+/* 모바일용 목차는 기본적으로 숨긴다 */
+.toc-inline {
+  display: none;
+}
+
+/* 오른쪽 여백이 목차를 담지 못하는 폭부터는 본문 위로 접어 넣는다.
+   기준: 본문 + (목차 + 간격) * 2 = 720 + 456 = 1176 */
+@media (max-width: 1180px) {
+  .doc-layout {
+    grid-template-columns: minmax(var(--content-gutter), 1fr) minmax(0, var(--content-width)) minmax(var(--content-gutter), 1fr);
+  }
+  .doc-aside {
+    display: none;
+  }
+  .toc-inline {
+    display: block;
+  }
+}
+
+@media (max-width: 640px) {
+  .doc-layout {
+    padding: 2rem 0 3.5rem;
+    --content-gutter: 1rem;
   }
 }
 
