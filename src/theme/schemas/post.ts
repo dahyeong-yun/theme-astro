@@ -4,6 +4,8 @@ import { z } from 'astro/zod'
 export const blogPostSchema = z.object({
   title: z.string(),
   date: z.coerce.date(),
+  // 고쳐 쓴 글에만 직접 적는다. 적힌 경우에만 '고쳐 씀'으로 표시된다.
+  updated: z.coerce.date().optional(),
   description: z.string().optional(),
   tags: z.array(z.string()).default([]),
   banner: z.string().optional(),  // public/ 경로 또는 URL

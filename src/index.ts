@@ -10,7 +10,6 @@ import type { CollectionSource } from './theme/lib/fs-docs.js'
 import { invalidateFsDocs } from './theme/lib/fs-docs.js'
 import { remarkWikilink } from './theme/plugins/remark-wikilink.js'
 
-import { execSync } from 'child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -37,22 +36,6 @@ function themePage(relative: string): string {
   return fileURLToPath(new URL(`./theme/pages/${relative}`, import.meta.url))
 }
 
-function remarkModifiedTime() {
-  return function (tree: any, file: any) {
-    const filepath = file.history[0]
-    if (!filepath) return
-    try {
-      const result = execSync(`git log -1 --pretty=format:%aI -- "${filepath}"`)
-      const dateStr = result.toString().trim()
-      if (dateStr) {
-        file.data.astro.frontmatter.lastModified = dateStr
-      }
-    } catch (e) {
-      // ignore
-    }
-  }
-}
-
 export function blogTheme(config: BlogConfig): AstroIntegration {
   const wikiEnabled = config.wiki?.enabled !== false
   const wikiBase = (config.wiki?.basePath ?? DEFAULT_WIKI_BASE).replace(/\/+$/, '')
@@ -72,11 +55,7 @@ export function blogTheme(config: BlogConfig): AstroIntegration {
           ...(wikiEnabled ? [{ kind: 'wiki' as const, dir: wikiDir, base: wikiBase }] : []),
         ]
 
-        const remarkPlugins = [
-          remarkMath,
-          remarkModifiedTime,
-          [remarkWikilink, { sources }] as const,
-        ]
+        const remarkPlugins = [remarkMath, [remarkWikilink, { sources }] as const]
 
         // 모든 라우트를 테마가 소유 → 블로그 레포에 page 파일 불필요
         injectRoute({

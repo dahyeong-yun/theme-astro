@@ -24,8 +24,6 @@ interface Props {
   status?: 'seed' | 'growing' | 'evergreen'
   headings?: { depth: number; slug: string; text: string }[]
   id?: string
-  /** git 이력에서 뽑은 최종 수정 시각. frontmatter 의 updated 가 없을 때 대신 쓴다. */
-  lastModified?: string
   /** git 최초 커밋 시각. frontmatter 날짜에 시각이 없을 때 시·분·초를 채운다. */
   gitCreated?: Date
 }
@@ -39,7 +37,6 @@ const {
   status,
   headings = [],
   id,
-  lastModified,
   gitCreated,
 } = Astro.props
 
@@ -49,7 +46,7 @@ const STATUS_LABEL = {
   evergreen: '여물었음',
 } as const
 
-const updatedAt = updated ?? (lastModified ? new Date(lastModified) : undefined)
+const updatedAt = updated
 const wikiBase = (config.wiki?.basePath ?? '/wiki').replace(/\/+$/, '')
 ---
 
@@ -191,7 +188,7 @@ const wikiBase = (config.wiki?.basePath ?? '/wiki').replace(/\/+$/, '')
             {description && <p class="wiki-desc">{description}</p>}
             <div class="meta">
               {updatedAt && (
-                <span>마지막 갱신 <FormattedDate date={updatedAt} timeFrom={lastModified ? new Date(lastModified) : gitCreated} /></span>
+                <span>마지막 갱신 <FormattedDate date={updatedAt} /></span>
               )}
               {created && (
                 <span>작성 <FormattedDate date={created} timeFrom={gitCreated} /></span>
