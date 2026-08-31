@@ -1,12 +1,35 @@
 ---
+/**
+ * About 페이지.
+ *
+ * 본문은 테마가 아니라 콘텐츠에 있다 — `content/pages/about.md`.
+ * 블로그마다 다를 수밖에 없는 글을 테마가 들고 있으면 고칠 수가 없다.
+ */
+import { getEntry, render } from 'astro:content'
 import Page from '../layouts/Page.astro'
 import { pageHeading } from '../lib/nav.js'
 
-const heading = pageHeading('/about', { title: 'About' })
+let entry: any = null
+try {
+  entry = (await getEntry('pages' as any, 'about')) ?? null
+} catch {
+  // pages 컬렉션을 정의하지 않은 프로젝트에서도 페이지 자체는 뜬다.
+  entry = null
+}
+
+const Content = entry ? (await render(entry)).Content : null
+
+const nav = pageHeading('/about', { title: 'About' })
+const title = entry?.data?.title ?? nav.title
+const description = entry?.data?.description ?? nav.description
 ---
 
-<Page title={heading.title} description={heading.description}>
-  <p>
-    안녕하세요, Polymorlog입니다. Java/Spring, 성능 관리, 애자일 방법론 등 기술 주제를 다룹니다.
-  </p>
+<Page title={title} description={description}>
+  {Content ? (
+    <Content />
+  ) : (
+    <p class="empty-state">
+      <code>content/pages/about.md</code> 를 만들면 이 자리에 내용이 들어갑니다.
+    </p>
+  )}
 </Page>

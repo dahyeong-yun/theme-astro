@@ -2,6 +2,7 @@ import { defineCollection } from 'astro:content'
 import { glob } from 'astro/loaders'
 import { blogPostSchema } from './theme/schemas/post.js'
 import { wikiPageSchema } from './theme/schemas/wiki.js'
+import { pageSchema } from './theme/schemas/page.js'
 
 // 포스트: 나의 통찰·경험·생각이 담긴 글. 발행일 기준으로 흐른다.
 const posts = defineCollection({
@@ -15,4 +16,10 @@ const wiki = defineCollection({
   schema: wikiPageSchema,
 })
 
-export const collections = { posts, wiki }
+// 단독 페이지: About 처럼 날짜가 의미 없는 글
+const pages = defineCollection({
+  loader: glob({ base: './content/pages', pattern: '**/*.{md,mdx}' }),
+  schema: pageSchema,
+})
+
+export const collections = { posts, wiki, pages }

@@ -47,8 +47,19 @@ export const collections = {
     loader: glob({ base: './content/wiki', pattern: '**/*.{md,mdx}' }),
     schema: wikiPageSchema,
   }),
+  // About 처럼 날짜가 의미 없는 단독 페이지
+  pages: defineCollection({
+    loader: glob({ base: './content/pages', pattern: '**/*.{md,mdx}' }),
+    schema: pageSchema,
+  }),
 }
 ```
+
+`import { blogPostSchema, wikiPageSchema, pageSchema } from 'theme-astro'` 로 가져온다.
+
+`/about` 본문은 `content/pages/about.md` 에서 온다. 블로그마다 다를 수밖에 없는
+글을 테마가 들고 있으면 고칠 수가 없다. frontmatter 의 `title` / `description` 을
+적으면 `navigation` 에 적은 값보다 우선한다.
 
 `blog.config.ts`:
 

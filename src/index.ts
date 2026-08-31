@@ -177,3 +177,4 @@ export function blogTheme(config: BlogConfig): AstroIntegration {
 export type { BlogConfig, WikiConfig, ContentConfig } from './theme/types.js'
 export { blogPostSchema } from './theme/schemas/post.js'
 export { wikiPageSchema } from './theme/schemas/wiki.js'
+export { pageSchema } from './theme/schemas/page.js'
