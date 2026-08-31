@@ -56,9 +56,12 @@ export const collections = {
 const config: BlogConfig = {
   // ...
   navigation: [
-    { title: 'Blog', href: '/blog' },
-    { title: 'Wiki', href: '/wiki' },
-    { title: 'About', href: '/about' },
+    // description 은 그 페이지 제목 아래 한 줄 설명으로 들어간다.
+    // 적지 않으면 설명 줄을 그리지 않는다.
+    { title: 'Blog',   href: '/blog',   description: '겪은 일과 그때 한 생각을 남깁니다.' },
+    { title: 'Wiki',   href: '/wiki',   description: '정리해 둔 정보성 문서들. 계속 고쳐 씁니다.' },
+    { title: 'Series', href: '/series', description: '이어서 읽으면 좋은 글들을 묶었습니다.' },
+    { title: 'About',  href: '/about' },
   ],
   content: {
     postsPerPage: 10,     // /blog 한 쪽에 보여줄 글 수. 기본 10
@@ -72,6 +75,20 @@ const config: BlogConfig = {
   },
 }
 ```
+
+### 페이지 머리말 문구
+
+각 페이지 제목과 그 아래 한 줄 설명은 `navigation` 에서 온다.
+메뉴 이름과 설명이 한 곳에 모여 있어야 고칠 때 헤매지 않는다.
+
+| 항목 | 쓰임 |
+| --- | --- |
+| `title` | 내비게이션에 보이는 이름 겸 페이지 제목 |
+| `description` | 페이지 제목 아래 한 줄 설명. 없으면 설명 줄을 그리지 않는다 |
+| `pageTitle` | 내비에는 짧게, 페이지에서는 길게 쓰고 싶을 때만 |
+
+`/wiki` 는 `navigation` 에 적은 값을 먼저 보고, 없으면 `wiki.title` / `wiki.description`
+을 쓴다. 위키를 메뉴에 두지 않는 경우를 위한 것이다.
 
 `site.timeZone` 은 날짜 표기에 쓸 시간대다. 지정하지 않으면 UTC 를 쓴다.
 정적 빌드라 빌드 머신(로컬 KST / CI UTC)에 따라 표기가 흔들리지 않도록 고정해 둔다.

@@ -7,6 +7,7 @@ import BaseHead from '../../components/BaseHead.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import { getGitCreated } from '../../lib/git-dates.js';
 import PageHeader from '../../components/PageHeader.astro';
+import { pageHeading } from '../../lib/nav.js';
 
 const posts = await getCollection('posts');
 const seriesPosts = posts.filter((p) => !p.data.draft && p.data.series);
@@ -59,13 +60,18 @@ const seriesList = Array.from(seriesMap.entries()).map(([name, data]) => {
   };
 }).sort((a, b) => b.lastUpdated.valueOf() - a.lastUpdated.valueOf());
 
+const heading = pageHeading('/series', { title: 'Series' });
+
 
 ---
 
 <!doctype html>
 <html lang={config.site.language}>
   <head>
-    <BaseHead title={`Series | ${config.site.title}`} description="연재물 시리즈 목록" />
+    <BaseHead
+      title={`${heading.title} | ${config.site.title}`}
+      description={heading.description ?? config.site.description}
+    />
     <style>
       .series-grid {
         display: grid;
@@ -137,10 +143,7 @@ const seriesList = Array.from(seriesMap.entries()).map(([name, data]) => {
   <body>
     <Header />
     <main class="page">
-      <PageHeader
-        title="Series"
-        description="이어서 읽으면 좋은 글들을 묶었습니다."
-      >
+      <PageHeader title={heading.title} description={heading.description}>
         {seriesList.length > 0 && (
           <p class="stats">시리즈 {seriesList.length}개</p>
         )}

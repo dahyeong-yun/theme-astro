@@ -18,8 +18,19 @@ export interface ThemeConfig {
 }
 
 export interface NavItem {
+  /** 내비게이션에 보이는 이름 */
   title: string
   href: string
+  /**
+   * 그 페이지 제목 아래에 붙는 한 줄 설명.
+   * 적지 않으면 설명 줄을 그리지 않는다.
+   */
+  description?: string
+  /**
+   * 페이지 제목. 내비에 짧게 쓰고 페이지에서는 길게 쓰고 싶을 때만 적는다.
+   * 적지 않으면 title 을 그대로 쓴다.
+   */
+  pageTitle?: string
 }
 
 export interface GtmConfig {

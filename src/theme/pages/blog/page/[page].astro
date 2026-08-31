@@ -13,6 +13,7 @@ import {
   sliceForPage,
   toDocListItem,
 } from '../../../lib/posts.js'
+import { pageHeading } from '../../../lib/nav.js'
 
 export async function getStaticPaths() {
   const posts = await getPublishedPosts()
@@ -27,20 +28,21 @@ export async function getStaticPaths() {
 const { page, total, postCount } = Astro.props
 const posts = await getPublishedPosts()
 const items = sliceForPage(posts, page).map(toDocListItem)
+const heading = pageHeading('/blog', { title: 'Blog' })
 ---
 
 <!doctype html>
 <html lang={config.site.language}>
   <head>
     <BaseHead
-      title={`Blog (${page}/${total}) | ${config.site.title}`}
-      description={config.site.description}
+      title={`${heading.title} (${page}/${total}) | ${config.site.title}`}
+      description={heading.description ?? config.site.description}
     />
   </head>
   <body>
     <Header />
     <main class="page">
-      <PageHeader title="Blog" description="겪은 일과 그때 한 생각을 남깁니다.">
+      <PageHeader title={heading.title} description={heading.description}>
         <p class="count">글 {postCount}편 · {page}/{total} 쪽</p>
       </PageHeader>
 

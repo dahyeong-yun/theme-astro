@@ -14,12 +14,16 @@ import Header from '../../components/Header.astro'
 import PageHeader from '../../components/PageHeader.astro'
 import DocList, { type DocListItem } from '../../components/DocList.astro'
 import { getGitCreated } from '../../lib/git-dates.js'
+import { pageHeading } from '../../lib/nav.js'
 
 const wikiBase = (config.wiki?.basePath ?? '/wiki').replace(/\/+$/, '')
-const wikiTitle = config.wiki?.title ?? 'Wiki'
-const wikiDescription =
-  config.wiki?.description ??
-  '알아둘 만한 것들을 주제별로 정리해 둔 문서 모음입니다. 글과 달리 계속 고쳐 씁니다.'
+// 내비에 적어 둔 문구가 있으면 그것을 쓰고, 없으면 wiki 설정을 쓴다.
+const heading = pageHeading(wikiBase, {
+  title: config.wiki?.title ?? 'Wiki',
+  description: config.wiki?.description,
+})
+const wikiTitle = heading.title
+const wikiDescription = heading.description
 
 let entries: any[] = []
 try {
@@ -79,7 +83,10 @@ const allTags = [...new Set(pages.flatMap((p) => p.tags ?? []))].sort((a, b) =>
 <!doctype html>
 <html lang={config.site.language}>
   <head>
-    <BaseHead title={`${wikiTitle} | ${config.site.title}`} description={wikiDescription} />
+    <BaseHead
+      title={`${wikiTitle} | ${config.site.title}`}
+      description={wikiDescription ?? config.site.description}
+    />
     <style>
       .stats {
         margin: 0.75rem 0 0;

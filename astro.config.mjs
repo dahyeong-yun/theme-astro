@@ -18,14 +18,10 @@ const devConfig = {
     fontFamily: 'Pretendard',
   },
   navigation: [
-    { title: 'Blog', href: '/blog' },
-    { title: 'Wiki', href: '/wiki' },
-    { title: 'About', href: '/about' },
+    { title: 'Blog', href: '/blog', description: '테마 미리보기용 더미 글 목록입니다.' },
+    { title: 'Wiki', href: '/wiki', description: '테마 미리보기용 더미 위키 문서들입니다.' },
+    { title: 'About', href: '/about', description: '테마 개발용 미리보기 사이트입니다.' },
   ],
-  wiki: {
-    title: 'Wiki',
-    description: '정리해 둔 정보성 문서 모음. 계속 고쳐 씁니다.',
-  },
   analytics: {},
   seo: {
     openGraph: true,

@@ -1,8 +1,11 @@
 ---
 import Page from '../layouts/Page.astro'
+import { pageHeading } from '../lib/nav.js'
+
+const heading = pageHeading('/about', { title: 'About' })
 ---
 
-<Page title="About" description="About Polymorlog">
+<Page title={heading.title} description={heading.description}>
   <p>
     안녕하세요, Polymorlog입니다. Java/Spring, 성능 관리, 애자일 방법론 등 기술 주제를 다룹니다.
   </p>

@@ -14,6 +14,7 @@ import Header from '../components/Header.astro'
 import TableOfContents from '../components/TableOfContents.astro'
 import Backlinks from '../components/Backlinks.astro'
 import CodeCopyScript from '../components/CodeCopyScript.astro'
+import { pageHeading } from '../lib/nav.js'
 
 interface Props {
   title: string
@@ -48,12 +49,14 @@ const STATUS_LABEL = {
 
 const updatedAt = updated
 const wikiBase = (config.wiki?.basePath ?? '/wiki').replace(/\/+$/, '')
+// 위키 이름은 대문과 같은 경로로 읽는다 (내비 설정 → wiki 설정 순)
+const wikiName = pageHeading(wikiBase, { title: config.wiki?.title ?? 'Wiki' }).title
 ---
 
 <html lang={config.site.language}>
   <head>
     <BaseHead
-      title={`${title} | ${config.wiki?.title ?? 'Wiki'} | ${config.site.title}`}
+      title={`${title} | ${wikiName} | ${config.site.title}`}
       description={description ?? config.site.description}
     />
     <style>
@@ -181,7 +184,7 @@ const wikiBase = (config.wiki?.basePath ?? '/wiki').replace(/\/+$/, '')
         <div class="prose">
           <div class="title">
             <div class="eyebrow">
-              <span class="kind">{config.wiki?.title ?? 'Wiki'}</span>
+              <span class="kind">{wikiName}</span>
               {status && <span class="status">{STATUS_LABEL[status]}</span>}
             </div>
             <h1>{title}</h1>
