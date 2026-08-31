@@ -389,8 +389,10 @@ pre code .line {
   display: block;
   position: relative;
   padding-left: 2.75rem;
-  min-height: unset !important;
   line-height: var(--code-line-height) !important;
+  /* 빈 줄은 내용이 없어 flex 아이템 높이가 0 이 된다.
+     코드 안의 빈 줄도 한 줄로 보이도록 한 줄 높이를 보장한다. */
+  min-height: calc(1em * var(--code-line-height)) !important;
 }
 
 pre code .line::before {
