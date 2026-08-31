@@ -58,6 +58,8 @@ export interface WikiConfig {
 export interface ContentConfig {
   /** 포스트 콘텐츠 디렉터리. 기본값 'content/posts' */
   postsDir?: string
+  /** 목록 한 쪽에 보여줄 글 수. 기본값 10 */
+  postsPerPage?: number
 }
 
 export interface BlogConfig {

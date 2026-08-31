@@ -1,16 +1,25 @@
 ---
+/**
+ * 위키 대문.
+ *
+ * 그냥 목록만 두면 눌러 들어왔을 때 여기가 어떤 곳인지 알 수 없다.
+ * 무엇을 모아둔 곳인지 먼저 말하고, 분류로 들어가는 입구를 보여준 다음,
+ * 최근에 손댄 문서와 전체 목록을 잇는다.
+ */
 import { getCollection } from 'astro:content'
 import config from 'virtual:blog-config'
 import BaseHead from '../../components/BaseHead.astro'
 import Footer from '../../components/Footer.astro'
 import Header from '../../components/Header.astro'
-import FormattedDate from '../../components/FormattedDate.astro'
+import PageHeader from '../../components/PageHeader.astro'
+import DocList, { type DocListItem } from '../../components/DocList.astro'
 import { getGitCreated } from '../../lib/git-dates.js'
 
 const wikiBase = (config.wiki?.basePath ?? '/wiki').replace(/\/+$/, '')
 const wikiTitle = config.wiki?.title ?? 'Wiki'
 const wikiDescription =
-  config.wiki?.description ?? '정리해 둔 정보성 문서 모음. 계속 고쳐 씁니다.'
+  config.wiki?.description ??
+  '알아둘 만한 것들을 주제별로 정리해 둔 문서 모음입니다. 글과 달리 계속 고쳐 씁니다.'
 
 let entries: any[] = []
 try {
@@ -19,50 +28,52 @@ try {
   entries = []
 }
 
-interface WikiItem {
-  title: string
-  url: string
-  description?: string
-  updated?: Date
-  updatedFrom?: Date
-  tags: string[]
+interface WikiItem extends DocListItem {
   group: string
+  sortKey: number
 }
 
 const pages: WikiItem[] = entries
   .filter((entry) => !entry.data.draft)
   .map((entry) => {
     const docPath = entry.id.replace(/^\/+|\/+$/g, '').replace(/\/index$/, '')
-    const slug = entry.data.slug ? entry.data.slug.replace(/^\/|\/$/g, '') : docPath
+    const slug = (entry.data.slug ?? docPath).replace(/^\/|\/$/g, '')
     const segments = docPath.split('/')
+    const updated = entry.data.updated ?? entry.data.created
     return {
       title: entry.data.title,
       url: `${wikiBase}/${slug}/`,
       description: entry.data.description,
-      updated: entry.data.updated ?? entry.data.created,
-      updatedFrom: getGitCreated(entry.filePath),
+      date: updated,
+      timeFrom: getGitCreated(entry.filePath),
       tags: entry.data.tags ?? [],
       // 최상위 폴더를 분류로 쓴다. 루트에 바로 놓인 문서는 '기타'.
       group: segments.length > 1 ? segments[0] : '기타',
+      sortKey: updated?.valueOf() ?? 0,
     }
   })
+
+const locale = config.site.language || 'ko'
 
 const groups = [...new Set(pages.map((p) => p.group))].sort((a, b) => {
   if (a === '기타') return 1
   if (b === '기타') return -1
-  return a.localeCompare(b, config.site.language || 'ko')
+  return a.localeCompare(b, locale)
 })
-
-const allTags = [...new Set(pages.flatMap((p) => p.tags))].sort((a, b) =>
-  a.localeCompare(b, config.site.language || 'ko'),
-)
 
 const byGroup = groups.map((group) => ({
   group,
+  anchor: `category-${encodeURIComponent(group)}`,
   items: pages
     .filter((p) => p.group === group)
-    .sort((a, b) => a.title.localeCompare(b.title, config.site.language || 'ko')),
+    .sort((a, b) => a.title.localeCompare(b.title, locale)),
 }))
+
+const recent = [...pages].sort((a, b) => b.sortKey - a.sortKey).slice(0, 5)
+
+const allTags = [...new Set(pages.flatMap((p) => p.tags ?? []))].sort((a, b) =>
+  a.localeCompare(b, locale),
+)
 ---
 
 <!doctype html>
@@ -70,34 +81,53 @@ const byGroup = groups.map((group) => ({
   <head>
     <BaseHead title={`${wikiTitle} | ${config.site.title}`} description={wikiDescription} />
     <style>
-      main {
-        max-width: 860px;
-        margin: 0 auto;
-        padding: 2rem 1.5rem;
-        font-family: var(--font-sans);
-      }
-      @media (max-width: 640px) {
-        main {
-          padding: 1.5rem 1rem;
-        }
-      }
-      h1.page-title {
-        font-size: 1.4rem;
-        font-weight: 700;
-        margin: 0 0 0.5rem 0;
-        letter-spacing: -0.01em;
-      }
-      .page-desc {
-        margin: 0 0 2rem 0;
+      .stats {
+        margin: 0.75rem 0 0;
+        font-size: 0.82rem;
         color: var(--color-text-secondary);
+        font-variant-numeric: tabular-nums;
+      }
+      .category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.75rem;
+      }
+      .category-card {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.9rem 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        text-decoration: none;
+        background: var(--color-surface);
+        transition: border-color var(--transition-speed) var(--transition-timing),
+                    background-color var(--transition-speed) var(--transition-timing);
+      }
+      .category-card:hover {
+        border-color: var(--color-accent);
+        background: var(--color-surface-secondary);
+      }
+      .category-name {
         font-size: 0.95rem;
-        line-height: 1.6;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .category-count {
+        font-size: 0.8rem;
+        color: var(--color-text-secondary);
+        font-variant-numeric: tabular-nums;
+        flex-shrink: 0;
       }
       .tag-filter {
         display: flex;
         flex-wrap: wrap;
         gap: 0.4rem;
-        margin-bottom: 2.5rem;
+        margin-bottom: 1.5rem;
       }
       .tag-filter button {
         font: inherit;
@@ -108,7 +138,9 @@ const byGroup = groups.map((group) => ({
         border: 1px solid var(--color-border);
         border-radius: 999px;
         cursor: pointer;
-        transition: color 0.15s, border-color 0.15s, background 0.15s;
+        transition: color var(--transition-speed) var(--transition-timing),
+                    border-color var(--transition-speed) var(--transition-timing),
+                    background-color var(--transition-speed) var(--transition-timing);
       }
       .tag-filter button:hover {
         color: var(--color-accent);
@@ -119,109 +151,74 @@ const byGroup = groups.map((group) => ({
         border-color: transparent;
         background: var(--color-badge-bg);
       }
-      section.group {
-        margin-bottom: 2.5rem;
+      .category-block + .category-block {
+        margin-top: 2rem;
       }
-      section.group[hidden] {
+      .category-block[hidden] {
         display: none;
       }
-      h2.group-title {
-        font-size: 0.8rem;
+      .category-block h3 {
+        font-size: 0.78rem;
         font-weight: 600;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
         color: var(--color-text-secondary);
-        margin: 0 0 0.75rem 0;
-      }
-      ul {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
-      li[hidden] {
-        display: none;
-      }
-      li a {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 1rem;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid var(--color-border);
-        text-decoration: none;
-        color: var(--color-text-primary);
-        transition: color 0.15s;
-        min-width: 0;
-      }
-      li a:hover {
-        color: var(--color-accent);
-      }
-      .item-title {
-        font-size: 1rem;
-        font-weight: 500;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        min-width: 0;
-      }
-      .item-date {
-        font-size: 0.85rem;
-        color: var(--color-text-secondary);
-        white-space: nowrap;
-        flex-shrink: 0;
-      }
-      .item-desc {
-        margin: 0.15rem 0 0 0;
-        font-size: 0.85rem;
-        color: var(--color-text-secondary);
-        line-height: 1.5;
-      }
-      .empty {
-        color: var(--color-text-secondary);
-        font-size: 0.95rem;
+        margin: 0 0 0.75rem;
+        scroll-margin-top: 5rem;
       }
     </style>
   </head>
   <body>
     <Header />
-    <main>
-      <h1 class="page-title">{wikiTitle}</h1>
-      <p class="page-desc">{wikiDescription}</p>
+    <main class="page">
+      <PageHeader title={wikiTitle} description={wikiDescription}>
+        {pages.length > 0 && (
+          <p class="stats">문서 {pages.length}개 · 분류 {groups.length}개</p>
+        )}
+      </PageHeader>
 
-      {allTags.length > 0 && (
-        <div class="tag-filter" id="tag-filter">
-          <button type="button" data-tag="" aria-pressed="true">전체</button>
-          {allTags.map((tag) => (
-            <button type="button" data-tag={tag} aria-pressed="false">#{tag}</button>
-          ))}
-        </div>
-      )}
-
-      {pages.length === 0 && (
-        <p class="empty">아직 위키 문서가 없습니다. <code>content/wiki/</code> 에 문서를 추가해 보세요.</p>
-      )}
-
-      {byGroup.map(({ group, items }) => (
-        <section class="group" data-group={group}>
-          <h2 class="group-title">{group}</h2>
-          <ul>
-            {items.map((item) => (
-              <li data-tags={item.tags.join('|')}>
-                <a href={item.url}>
-                  <span class="item-title">{item.title}</span>
-                  {item.updated && (
-                    <span class="item-date"><FormattedDate date={item.updated} timeFrom={item.updatedFrom} /></span>
-                  )}
+      {pages.length === 0 ? (
+        <p class="empty-state">
+          아직 위키 문서가 없습니다. <code>content/wiki/</code> 에 문서를 추가해 보세요.
+        </p>
+      ) : (
+        <>
+          <section class="page-section">
+            <h2 class="section-title">분류</h2>
+            <div class="category-grid">
+              {byGroup.map(({ group, anchor, items }) => (
+                <a class="category-card" href={`#${anchor}`}>
+                  <span class="category-name">{group}</span>
+                  <span class="category-count">{items.length}</span>
                 </a>
-                {item.description && <p class="item-desc">{item.description}</p>}
-              </li>
+              ))}
+            </div>
+          </section>
+
+          <section class="page-section">
+            <h2 class="section-title">최근 갱신</h2>
+            <DocList items={recent} showDescription />
+          </section>
+
+          <section class="page-section">
+            <h2 class="section-title">전체 문서</h2>
+            {allTags.length > 0 && (
+              <div class="tag-filter" id="tag-filter">
+                <button type="button" data-tag="" aria-pressed="true">전체</button>
+                {allTags.map((tag) => (
+                  <button type="button" data-tag={tag} aria-pressed="false">#{tag}</button>
+                ))}
+              </div>
+            )}
+            {byGroup.map(({ group, anchor, items }) => (
+              <div class="category-block" data-group={group}>
+                <h3 id={anchor}>{group}</h3>
+                <DocList items={items} />
+              </div>
             ))}
-          </ul>
-        </section>
-      ))}
+          </section>
+        </>
+      )}
     </main>
     <Footer />
 
@@ -229,20 +226,19 @@ const byGroup = groups.map((group) => ({
       // 태그 필터. ?tag=... 로 들어와도 같은 상태가 되도록 URL 과 맞춘다.
       function setupWikiFilter() {
         const filter = document.getElementById('tag-filter')
-        const sections = Array.from(document.querySelectorAll<HTMLElement>('section.group'))
-        if (sections.length === 0) return
+        const blocks = Array.from(document.querySelectorAll<HTMLElement>('.category-block'))
+        if (blocks.length === 0) return
 
         function apply(tag: string) {
-          for (const section of sections) {
+          for (const block of blocks) {
             let visible = 0
-            const items = Array.from(section.querySelectorAll<HTMLElement>('li'))
-            for (const item of items) {
+            for (const item of Array.from(block.querySelectorAll<HTMLElement>('.doc-list > li'))) {
               const tags = (item.dataset.tags || '').split('|').filter(Boolean)
               const show = !tag || tags.includes(tag)
               item.hidden = !show
               if (show) visible++
             }
-            section.hidden = visible === 0
+            block.hidden = visible === 0
           }
           if (filter) {
             for (const button of Array.from(filter.querySelectorAll('button'))) {

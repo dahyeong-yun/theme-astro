@@ -1,0 +1,23 @@
+---
+/**
+ * 목록/색인 페이지의 머리말.
+ *
+ * 페이지마다 제목 크기와 여백을 따로 정하면 사이트가 중구난방이 된다.
+ * 모든 색인 페이지는 이 컴포넌트를 쓰고, 모양은 global.css 의 .page-head 가 정한다.
+ */
+interface Props {
+  /** 제목 위 작은 분류 표시 */
+  eyebrow?: string
+  title: string
+  description?: string
+}
+
+const { eyebrow, title, description } = Astro.props
+---
+
+<header class="page-head">
+  {eyebrow && <span class="eyebrow">{eyebrow}</span>}
+  <h1>{title}</h1>
+  {description && <p class="page-desc">{description}</p>}
+  <slot />
+</header>

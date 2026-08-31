@@ -1,0 +1,49 @@
+---
+/**
+ * 문서 목록 한 벌. 블로그·위키·시리즈가 모두 같은 줄 모양을 쓰도록 한 곳에 모았다.
+ * 모양은 global.css 의 .doc-list 가 정한다.
+ */
+import FormattedDate from './FormattedDate.astro'
+
+export interface DocListItem {
+  title: string
+  url: string
+  description?: string
+  date?: Date
+  /** date 에 시각이 없을 때 시·분·초를 빌려올 값 */
+  timeFrom?: Date
+  /** 태그 필터용. li 의 data-tags 로 들어간다. */
+  tags?: string[]
+}
+
+interface Props {
+  items: DocListItem[]
+  /** 설명 줄을 함께 보여줄지 */
+  showDescription?: boolean
+  emptyMessage?: string
+}
+
+const { items, showDescription = false, emptyMessage } = Astro.props
+---
+
+{items.length === 0 && emptyMessage ? (
+  <p class="empty-state">{emptyMessage}</p>
+) : (
+  <ul class="doc-list">
+    {items.map((item) => (
+      <li data-tags={item.tags?.join('|')}>
+        <a href={item.url}>
+          <span class="doc-title">{item.title}</span>
+          {item.date && (
+            <span class="doc-date">
+              <FormattedDate date={item.date} timeFrom={item.timeFrom} />
+            </span>
+          )}
+        </a>
+        {showDescription && item.description && (
+          <p class="doc-desc">{item.description}</p>
+        )}
+      </li>
+    ))}
+  </ul>
+)}

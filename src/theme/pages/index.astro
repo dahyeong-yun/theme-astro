@@ -1,8 +1,53 @@
 ---
+import { getCollection } from 'astro:content'
 import config from 'virtual:blog-config'
 import Footer from '../components/Footer.astro'
 import Header from '../components/Header.astro'
 import BaseHead from '../components/BaseHead.astro'
+import DocList, { type DocListItem } from '../components/DocList.astro'
+import { getGitCreated } from '../lib/git-dates.js'
+
+const wikiBase = (config.wiki?.basePath ?? '/wiki').replace(/\/+$/, '')
+const wikiEnabled = config.wiki?.enabled !== false
+
+async function safeCollection(name: string): Promise<any[]> {
+  try {
+    return (await getCollection(name as any)) ?? []
+  } catch {
+    return []
+  }
+}
+
+const recentPosts: DocListItem[] = (await safeCollection('posts'))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 5)
+  .map((post) => ({
+    title: post.data.title,
+    url: `/blog/${(post.data.slug ?? post.id.replace(/\/index$/, '')).replace(/^\/|\/$/g, '')}/`,
+    description: post.data.description,
+    date: post.data.date,
+    timeFrom: getGitCreated(post.filePath),
+  }))
+
+const recentWiki: DocListItem[] = wikiEnabled
+  ? (await safeCollection('wiki'))
+      .filter((p) => !p.data.draft)
+      .map((entry) => {
+        const docPath = entry.id.replace(/^\/+|\/+$/g, '').replace(/\/index$/, '')
+        const updated = entry.data.updated ?? entry.data.created
+        return {
+          title: entry.data.title,
+          url: `${wikiBase}/${(entry.data.slug ?? docPath).replace(/^\/|\/$/g, '')}/`,
+          description: entry.data.description,
+          date: updated,
+          timeFrom: getGitCreated(entry.filePath),
+          _sort: updated?.valueOf() ?? 0,
+        }
+      })
+      .sort((a: any, b: any) => b._sort - a._sort)
+      .slice(0, 5)
+  : []
 ---
 
 <!doctype html>
@@ -10,68 +55,81 @@ import BaseHead from '../components/BaseHead.astro'
   <head>
     <BaseHead title={config.site.title} description={config.site.description} />
     <style>
-      main {
-        max-width: 860px;
-        margin: 0 auto;
-        padding: 2rem 1.5rem;
+      .intro {
+        margin-bottom: 3.5rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--color-border);
+      }
+      .intro h1 {
+        margin: 0;
+        font-size: 2.5rem;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1.15;
+      }
+      .intro p {
+        margin: 0.75rem 0 0;
+        font-size: 1.05rem;
+        color: var(--color-text-secondary);
+        line-height: 1.6;
       }
       @media (max-width: 640px) {
-        main {
-          padding: 1.5rem 1rem;
+        .intro h1 {
+          font-size: 2rem;
         }
       }
-      h1 {
-        font-size: 2.5rem;
-        font-weight: 800;
-        letter-spacing: -0.04em;
-        margin-bottom: 0.5rem;
-      }
-      .subtitle {
-        font-size: 1.1rem;
-        color: var(--color-text-secondary);
-        margin-bottom: 3rem;
-      }
-      .links {
+      .section-head {
         display: flex;
+        align-items: baseline;
+        justify-content: space-between;
         gap: 1rem;
-        margin-top: 2rem;
+        margin-bottom: 0.9rem;
       }
-      .links a {
-        padding: 0.6rem 1.2rem;
-        border-radius: 8px;
-        text-decoration: none;
+      .section-head .section-title {
+        margin: 0;
+      }
+      .see-all {
+        font-size: 0.82rem;
         font-weight: 500;
-        font-size: 0.9rem;
-        transition: all 0.15s;
+        color: var(--color-text-secondary);
+        text-decoration: none;
+        white-space: nowrap;
+        transition: color var(--transition-speed) var(--transition-timing);
       }
-      .links a.primary {
-        background: var(--color-accent);
-        color: #fff;
-      }
-      .links a.primary:hover {
-        opacity: 0.85;
-      }
-      .links a.secondary {
-        border: 1px solid var(--color-border);
-        color: var(--color-text-primary);
-      }
-      .links a.secondary:hover {
-        background: var(--color-surface);
+      .see-all:hover {
+        color: var(--color-accent);
       }
     </style>
   </head>
   <body>
     <Header />
-    <main>
-      <h1>{config.site.title}</h1>
-      <p class="subtitle">{config.site.description}</p>
-      <div class="links">
-        {config.navigation.map((item, i) => (
-          <a href={item.href} class={i === 0 ? 'primary' : 'secondary'}>
-            {item.title}
-          </a>
-        ))}
+    <main class="page">
+      <div class="intro">
+        <h1>{config.site.title}</h1>
+        <p>{config.site.description}</p>
       </div>
+
+      <section class="page-section">
+        <div class="section-head">
+          <h2 class="section-title">최근 글</h2>
+          <a class="see-all" href="/blog">글 전체 보기 →</a>
+        </div>
+        <DocList
+          items={recentPosts}
+          showDescription
+          emptyMessage="아직 쓴 글이 없습니다."
+        />
+      </section>
+
+      {wikiEnabled && recentWiki.length > 0 && (
+        <section class="page-section">
+          <div class="section-head">
+            <h2 class="section-title">최근 갱신한 위키</h2>
+            <a class="see-all" href={wikiBase}>위키 전체 보기 →</a>
+          </div>
+          <DocList items={recentWiki} showDescription />
+        </section>
+      )}
     </main>
     <Footer />
   </body>

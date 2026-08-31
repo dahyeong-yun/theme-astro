@@ -60,6 +60,9 @@ const config: BlogConfig = {
     { title: 'Wiki', href: '/wiki' },
     { title: 'About', href: '/about' },
   ],
+  content: {
+    postsPerPage: 10,     // /blog 한 쪽에 보여줄 글 수. 기본 10
+  },
   wiki: {
     enabled: true,        // false 면 /wiki 라우트를 만들지 않는다
     basePath: '/wiki',
@@ -69,6 +72,9 @@ const config: BlogConfig = {
   },
 }
 ```
+
+`site.timeZone` 은 날짜 표기에 쓸 시간대다. 지정하지 않으면 UTC 를 쓴다.
+정적 빌드라 빌드 머신(로컬 KST / CI UTC)에 따라 표기가 흔들리지 않도록 고정해 둔다.
 
 ### frontmatter
 
@@ -128,6 +134,24 @@ draft: false
 
 대상 문서가 없거나 초안이면 링크 대신 `.wikilink-broken` 으로 렌더링하고
 빌드 로그에 경고를 찍는다.
+
+## 페이지 구조
+
+색인 페이지(`/`, `/blog`, `/wiki`, `/series`, `/about`)는 모두 같은 뼈대를 쓴다.
+페이지마다 제목 크기와 여백을 따로 정하면 사이트가 중구난방이 된다.
+
+| 요소 | 담당 |
+| --- | --- |
+| 바깥 여백·폭 | `.page` (global.css) |
+| 제목·설명 | `PageHeader.astro` → `.page-head` |
+| 묶음 제목 | `.section-title` |
+| 문서 줄 목록 | `DocList.astro` → `.doc-list` |
+| 쪽 이동 | `Pagination.astro` |
+
+헤더 안의 조작 요소(내비 링크, 테마 토글)는 `--header-control-size` /
+`--header-control-radius` 를 공유한다. 하나만 원형이거나 하나만 각지면
+그 줄이 통째로 엉성해 보인다. 활성 상태에서 글자 굵기를 바꾸지 않는 것도
+같은 이유다 — 굵어지면 칸 너비가 늘어 내비 전체가 미세하게 밀린다.
 
 ## 백링크
 

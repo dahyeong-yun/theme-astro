@@ -6,6 +6,7 @@ import Footer from '../../components/Footer.astro';
 import BaseHead from '../../components/BaseHead.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import { getGitCreated } from '../../lib/git-dates.js';
+import PageHeader from '../../components/PageHeader.astro';
 
 const posts = await getCollection('posts');
 const seriesPosts = posts.filter((p) => !p.data.draft && p.data.series);
@@ -66,24 +67,6 @@ const seriesList = Array.from(seriesMap.entries()).map(([name, data]) => {
   <head>
     <BaseHead title={`Series | ${config.site.title}`} description="연재물 시리즈 목록" />
     <style>
-      main {
-        max-width: 860px;
-        margin: 0 auto;
-        padding: 2rem 1.5rem;
-        font-family: var(--font-sans);
-      }
-      @media (max-width: 640px) {
-        main {
-          padding: 1.5rem 1rem;
-        }
-      }
-      h1.page-title {
-        font-size: 1.4rem;
-        font-weight: 700;
-        margin-bottom: 2rem;
-        color: var(--color-text-secondary);
-        letter-spacing: -0.01em;
-      }
       .series-grid {
         display: grid;
         grid-template-columns: 1fr;
@@ -143,17 +126,25 @@ const seriesList = Array.from(seriesMap.entries()).map(([name, data]) => {
       .post-count {
         font-weight: 600;
       }
-      .no-series {
-        text-align: center;
-        padding: 4rem 0;
+      .stats {
+        margin: 0.75rem 0 0;
+        font-size: 0.82rem;
         color: var(--color-text-secondary);
+        font-variant-numeric: tabular-nums;
       }
     </style>
   </head>
   <body>
     <Header />
-    <main>
-      <h1 class="page-title">Series</h1>
+    <main class="page">
+      <PageHeader
+        title="Series"
+        description="이어서 읽으면 좋은 글들을 묶었습니다."
+      >
+        {seriesList.length > 0 && (
+          <p class="stats">시리즈 {seriesList.length}개</p>
+        )}
+      </PageHeader>
       {seriesList.length > 0 ? (
         <div class="series-grid">
           {seriesList.map((series) => (
@@ -170,9 +161,7 @@ const seriesList = Array.from(seriesMap.entries()).map(([name, data]) => {
           ))}
         </div>
       ) : (
-        <div class="no-series">
-          <p>등록된 시리즈가 없습니다.</p>
-        </div>
+        <p class="empty-state">아직 묶인 시리즈가 없습니다.</p>
       )}
     </main>
     <Footer />

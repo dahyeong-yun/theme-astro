@@ -1,0 +1,62 @@
+---
+import config from 'virtual:blog-config'
+import BaseHead from '../../../components/BaseHead.astro'
+import Footer from '../../../components/Footer.astro'
+import Header from '../../../components/Header.astro'
+import PageHeader from '../../../components/PageHeader.astro'
+import DocList from '../../../components/DocList.astro'
+import Pagination from '../../../components/Pagination.astro'
+import {
+  blogPageUrl,
+  getPublishedPosts,
+  pageCount,
+  sliceForPage,
+  toDocListItem,
+} from '../../../lib/posts.js'
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts()
+  const total = pageCount(posts.length)
+  // 1쪽은 /blog 가 맡으므로 2쪽부터 만든다.
+  return Array.from({ length: Math.max(0, total - 1) }, (_, i) => {
+    const page = i + 2
+    return { params: { page: String(page) }, props: { page, total, postCount: posts.length } }
+  })
+}
+
+const { page, total, postCount } = Astro.props
+const posts = await getPublishedPosts()
+const items = sliceForPage(posts, page).map(toDocListItem)
+---
+
+<!doctype html>
+<html lang={config.site.language}>
+  <head>
+    <BaseHead
+      title={`Blog (${page}/${total}) | ${config.site.title}`}
+      description={config.site.description}
+    />
+  </head>
+  <body>
+    <Header />
+    <main class="page">
+      <PageHeader title="Blog" description="겪은 일과 그때 한 생각을 남깁니다.">
+        <p class="count">글 {postCount}편 · {page}/{total} 쪽</p>
+      </PageHeader>
+
+      <DocList items={items} showDescription />
+
+      <Pagination current={page} total={total} hrefFor={blogPageUrl} />
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<style>
+  .count {
+    margin: 0.75rem 0 0;
+    font-size: 0.82rem;
+    color: var(--color-text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

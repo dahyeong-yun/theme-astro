@@ -1,100 +1,52 @@
 ---
-import { Image } from 'astro:assets'
-import { getCollection } from 'astro:content'
 import config from 'virtual:blog-config'
-import FormattedDate from '../../components/FormattedDate.astro'
+import BaseHead from '../../components/BaseHead.astro'
 import Footer from '../../components/Footer.astro'
 import Header from '../../components/Header.astro'
-import BaseHead from '../../components/BaseHead.astro'
-import { getGitCreated } from '../../lib/git-dates.js'
+import PageHeader from '../../components/PageHeader.astro'
+import DocList from '../../components/DocList.astro'
+import Pagination from '../../components/Pagination.astro'
+import {
+  blogPageUrl,
+  getPublishedPosts,
+  pageCount,
+  sliceForPage,
+  toDocListItem,
+} from '../../lib/posts.js'
 
-const posts = (await getCollection('posts'))
-  .filter((p) => !p.data.draft)
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+const posts = await getPublishedPosts()
+const total = pageCount(posts.length)
+const items = sliceForPage(posts, 1).map(toDocListItem)
 ---
 
 <!doctype html>
 <html lang={config.site.language}>
   <head>
-    <BaseHead title={config.site.title} description={config.site.description} />
-    <style>
-      main {
-        max-width: 860px;
-        margin: 0 auto;
-        padding: 2rem 1.5rem;
-        font-family: var(--font-sans);
-      }
-      @media (max-width: 640px) {
-        main {
-          padding: 1.5rem 1rem;
-        }
-      }
-      h1.page-title {
-        font-size: 1.4rem;
-        font-weight: 700;
-        margin-bottom: 2rem;
-        color: var(--color-text-secondary);
-        letter-spacing: -0.01em;
-      }
-      ul {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
-      ul li a {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 1rem;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid var(--color-border);
-        text-decoration: none;
-        color: var(--color-text-primary);
-        transition: color 0.15s;
-        min-width: 0;
-      }
-      ul li a:hover {
-        color: var(--color-accent);
-      }
-      .post-title {
-        font-size: 1rem;
-        font-weight: 500;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        min-width: 0;
-      }
-      .post-date {
-        font-size: 0.85rem;
-        color: var(--color-text-secondary);
-        white-space: nowrap;
-        flex-shrink: 0;
-      }
-    </style>
+    <BaseHead title={`Blog | ${config.site.title}`} description={config.site.description} />
   </head>
   <body>
     <Header />
-    <main>
-      <h1 class="page-title">Posts</h1>
-      <ul>
-        {posts.map((post) => {
-          const cleanPostId = post.id.replace(/^\/|\/$/g, '').replace(/\/index$/, '');
-          return (
-            <li>
-              <a href={`/blog/${cleanPostId}/`}>
-                <span class="post-title">{post.data.title}</span>
-                <span class="post-date">
-                  <FormattedDate date={post.data.date} timeFrom={getGitCreated((post as any).filePath)} />
-                </span>
-              </a>
-            </li>
-          );
-        })}
-      </ul>
+    <main class="page">
+      <PageHeader
+        title="Blog"
+        description="겪은 일과 그때 한 생각을 남깁니다."
+      >
+        <p class="count">글 {posts.length}편</p>
+      </PageHeader>
+
+      <DocList items={items} showDescription emptyMessage="아직 쓴 글이 없습니다." />
+
+      <Pagination current={1} total={total} hrefFor={blogPageUrl} />
     </main>
     <Footer />
   </body>
 </html>
+
+<style>
+  .count {
+    margin: 0.75rem 0 0;
+    font-size: 0.82rem;
+    color: var(--color-text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

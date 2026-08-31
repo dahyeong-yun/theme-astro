@@ -88,6 +88,10 @@ export function blogTheme(config: BlogConfig): AstroIntegration {
           entrypoint: themePage('blog/index.astro'),
         })
         injectRoute({
+          pattern: '/blog/page/[page]',
+          entrypoint: themePage('blog/page/[page].astro'),
+        })
+        injectRoute({
           pattern: '/blog/[...slug]',
           entrypoint: themePage('blog/[...slug].astro'),
         })
