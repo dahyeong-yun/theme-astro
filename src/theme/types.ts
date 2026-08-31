@@ -15,6 +15,8 @@ export interface ThemeConfig {
   colorScheme: 'light' | 'dark' | 'auto'
   codeTheme: string   // Shiki 테마 이름
   fontFamily: string
+  /** 모바일 브라우저 주소창 색(meta theme-color). 기본값 '#ffffff' */
+  themeColor?: string
 }
 
 export interface NavItem {
