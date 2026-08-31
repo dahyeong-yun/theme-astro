@@ -1,6 +1,7 @@
 ---
 import { type CollectionEntry, getCollection, render } from 'astro:content';
 import BlogPost from '../../layouts/BlogPost.astro';
+import { getGitCreated } from '../../lib/git-dates.js';
 
 export async function getStaticPaths() {
 	const posts = await getCollection('posts');
@@ -21,9 +22,10 @@ type Props = CollectionEntry<'posts'>;
 
 const post = Astro.props;
 const { Content, headings, remarkPluginFrontmatter } = await render(post);
+const gitCreated = getGitCreated((post as any).filePath);
 ---
 
-<BlogPost {...post.data} id={post.id} headings={headings} lastModified={remarkPluginFrontmatter?.lastModified}>
+<BlogPost {...post.data} id={post.id} headings={headings} lastModified={remarkPluginFrontmatter?.lastModified} gitCreated={gitCreated}>
 	<Content />
 </BlogPost>
 

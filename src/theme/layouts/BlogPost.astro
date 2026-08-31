@@ -15,9 +15,11 @@ type Props = CollectionEntry<'posts'>['data'] & {
   headings?: { depth: number; slug: string; text: string }[];
   id?: string;
   lastModified?: string;
+  /** git 최초 커밋 시각. frontmatter 날짜에 시각이 없을 때 시·분·초를 채운다. */
+  gitCreated?: Date;
 }
 
-const { title, description, date, banner, headings = [], series, id, lastModified } = Astro.props
+const { title, description, date, banner, headings = [], series, id, lastModified, gitCreated } = Astro.props
 ---
 
 <html lang={config.site.language}>
@@ -118,7 +120,7 @@ const { title, description, date, banner, headings = [], series, id, lastModifie
         <div class="prose">
           <div class="title">
             <div class="date">
-              <span>Posted on <FormattedDate date={date} /></span>
+              <span>Posted on <FormattedDate date={date} timeFrom={gitCreated} /></span>
               {lastModified && new Date(lastModified).toDateString() !== date.toDateString() && (
                 <span class="last-modified">
                   {" • "}Updated on <FormattedDate date={new Date(lastModified)} />

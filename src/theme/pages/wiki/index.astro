@@ -5,6 +5,7 @@ import BaseHead from '../../components/BaseHead.astro'
 import Footer from '../../components/Footer.astro'
 import Header from '../../components/Header.astro'
 import FormattedDate from '../../components/FormattedDate.astro'
+import { getGitCreated } from '../../lib/git-dates.js'
 
 const wikiBase = (config.wiki?.basePath ?? '/wiki').replace(/\/+$/, '')
 const wikiTitle = config.wiki?.title ?? 'Wiki'
@@ -23,6 +24,7 @@ interface WikiItem {
   url: string
   description?: string
   updated?: Date
+  updatedFrom?: Date
   tags: string[]
   group: string
 }
@@ -38,6 +40,7 @@ const pages: WikiItem[] = entries
       url: `${wikiBase}/${slug}/`,
       description: entry.data.description,
       updated: entry.data.updated ?? entry.data.created,
+      updatedFrom: getGitCreated(entry.filePath),
       tags: entry.data.tags ?? [],
       // 최상위 폴더를 분류로 쓴다. 루트에 바로 놓인 문서는 '기타'.
       group: segments.length > 1 ? segments[0] : '기타',
@@ -210,7 +213,7 @@ const byGroup = groups.map((group) => ({
                 <a href={item.url}>
                   <span class="item-title">{item.title}</span>
                   {item.updated && (
-                    <span class="item-date"><FormattedDate date={item.updated} /></span>
+                    <span class="item-date"><FormattedDate date={item.updated} timeFrom={item.updatedFrom} /></span>
                   )}
                 </a>
                 {item.description && <p class="item-desc">{item.description}</p>}

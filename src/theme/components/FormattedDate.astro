@@ -2,44 +2,65 @@
 /**
  * 날짜 표기: YYYY-MM-DD HH:mm:ss
  *
- * 정적 빌드라 빌드 머신의 시간대에 따라 결과가 달라지면 곤란하다.
- * (로컬은 KST, GitHub Actions 는 UTC) 그래서 시간대를 명시적으로 고정한다.
- * blog.config 의 site.timeZone 으로 바꿀 수 있고, 지정하지 않으면 UTC 다.
+ * 정적 빌드라 빌드 머신의 시간대(로컬 KST / GitHub Actions UTC)에 따라
+ * 결과가 달라지면 곤란하다. 그래서 시간대를 명시적으로 고정한다.
+ * blog.config 의 site.timeZone 으로 정하고, 지정하지 않으면 UTC 다.
  *
- * frontmatter 에 `date: 2026-08-30` 처럼 날짜만 쓰면 UTC 자정으로 해석되어
- * 00:00:00 으로 나온다. 시각까지 남기고 싶으면 `date: 2026-08-30 21:30:00` 으로 쓴다.
+ * frontmatter 에 `date: 2026-08-30` 처럼 날짜만 쓰면 UTC 자정으로 파싱된다.
+ * 이때는 없는 시각을 00:00:00 으로 지어내지 않고,
+ *   - timeFrom(보통 git 최초 커밋 시각)이 있으면 그 시각을 빌려 쓰고
+ *   - 없으면 날짜만 보여준다.
+ * 시각을 직접 정하고 싶으면 `date: 2026-08-30 21:30:00` 처럼 쓰면 그 값이 그대로 나온다.
  */
 import config from 'virtual:blog-config'
 
 interface Props {
   date: Date
+  /** date 에 시각이 없을 때 시·분·초를 빌려올 값 */
+  timeFrom?: Date
   /** 이 표기에만 다른 시간대를 쓰고 싶을 때 */
   timeZone?: string
 }
 
-const { date, timeZone } = Astro.props
+const { date, timeFrom, timeZone } = Astro.props
 const zone = timeZone ?? config.site.timeZone ?? 'UTC'
 
-const parts = new Intl.DateTimeFormat('en-CA', {
-  timeZone: zone,
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: false,
-})
-  .formatToParts(date)
-  .reduce<Record<string, string>>((acc, part) => {
-    acc[part.type] = part.value
-    return acc
-  }, {})
+/** 날짜만 적힌 값은 UTC 자정으로 파싱된다. 실제 시각이 딱 이 순간일 확률은 사실상 없다. */
+const isDateOnly = date.getTime() % 86_400_000 === 0
+
+function partsOf(value: Date, inZone: string) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: inZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  })
+    .formatToParts(value)
+    .reduce<Record<string, string>>((acc, part) => {
+      acc[part.type] = part.value
+      return acc
+    }, {})
+}
 
 // hour12: false 인데도 자정을 '24' 로 주는 환경이 있어 눌러 준다.
-const hour = parts.hour === '24' ? '00' : parts.hour
+const clockOf = (p: Record<string, string>) =>
+  `${p.hour === '24' ? '00' : p.hour}:${p.minute}:${p.second}`
 
-const formatted = `${parts.year}-${parts.month}-${parts.day} ${hour}:${parts.minute}:${parts.second}`
+let formatted: string
+if (!isDateOnly) {
+  const p = partsOf(date, zone)
+  formatted = `${p.year}-${p.month}-${p.day} ${clockOf(p)}`
+} else {
+  // 날짜 부분은 적힌 그대로 보여야 하므로 UTC 로 읽는다.
+  // 시간대를 적용하면 자정이 앞뒤 날짜로 밀린다.
+  const p = partsOf(date, 'UTC')
+  const day = `${p.year}-${p.month}-${p.day}`
+  formatted = timeFrom ? `${day} ${clockOf(partsOf(timeFrom, zone))}` : day
+}
 ---
 
 <time datetime={date.toISOString()}>{formatted}</time>

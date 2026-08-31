@@ -5,6 +5,7 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import BaseHead from '../../components/BaseHead.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
+import { getGitCreated } from '../../lib/git-dates.js';
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts');
@@ -216,7 +217,7 @@ function getPostSlug(post: any) {
                   <h2 class="post-title">{post.data.title}</h2>
                   {post.data.description && <p class="post-desc">{post.data.description}</p>}
                   <div class="post-meta">
-                    <FormattedDate date={post.data.date} />
+                    <FormattedDate date={post.data.date} timeFrom={getGitCreated((post as any).filePath)} />
                   </div>
                 </div>
               </a>

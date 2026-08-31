@@ -5,12 +5,18 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import BaseHead from '../../components/BaseHead.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
+import { getGitCreated } from '../../lib/git-dates.js';
 
 const posts = await getCollection('posts');
 const seriesPosts = posts.filter((p) => !p.data.draft && p.data.series);
 
 // 시리즈별 그룹화
-const seriesMap = new Map<string, { posts: typeof seriesPosts; lastUpdated: Date }>();
+// lastUpdated 를 정한 글의 파일 경로도 같이 들고 다닌다.
+// frontmatter 날짜에 시각이 없을 때 그 글의 git 최초 커밋 시각을 빌려 쓴다.
+const seriesMap = new Map<
+  string,
+  { posts: typeof seriesPosts; lastUpdated: Date; lastUpdatedFile?: string }
+>();
 
 seriesPosts.forEach((post) => {
   const seriesName = post.data.series!;
@@ -19,11 +25,13 @@ seriesPosts.forEach((post) => {
     seriesMap.set(seriesName, {
       posts: [post],
       lastUpdated: post.data.date,
+      lastUpdatedFile: (post as any).filePath,
     });
   } else {
     current.posts.push(post);
     if (post.data.date > current.lastUpdated) {
       current.lastUpdated = post.data.date;
+      current.lastUpdatedFile = (post as any).filePath;
     }
   }
 });
@@ -45,6 +53,7 @@ const seriesList = Array.from(seriesMap.entries()).map(([name, data]) => {
     slug,
     postCount: data.posts.length,
     lastUpdated: data.lastUpdated,
+    lastUpdatedFrom: getGitCreated(data.lastUpdatedFile),
     posts: data.posts,
   };
 }).sort((a, b) => b.lastUpdated.valueOf() - a.lastUpdated.valueOf());
@@ -155,7 +164,7 @@ const seriesList = Array.from(seriesMap.entries()).map(([name, data]) => {
               </div>
               <div class="series-card-footer">
                 <span class="post-count">{series.postCount}개의 글</span>
-                <span class="last-updated">최근 업데이트: <FormattedDate date={series.lastUpdated} /></span>
+                <span class="last-updated">최근 업데이트: <FormattedDate date={series.lastUpdated} timeFrom={series.lastUpdatedFrom} /></span>
               </div>
             </a>
           ))}
