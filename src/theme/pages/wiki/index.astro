@@ -231,14 +231,17 @@ const allTags = [...new Set(pages.flatMap((p) => p.tags ?? []))].sort((a, b) =>
 
         function apply(tag: string) {
           for (const block of blocks) {
-            let visible = 0
+            const shown: HTMLElement[] = []
             for (const item of Array.from(block.querySelectorAll<HTMLElement>('.doc-list > li'))) {
               const tags = (item.dataset.tags || '').split('|').filter(Boolean)
               const show = !tag || tags.includes(tag)
               item.hidden = !show
-              if (show) visible++
+              item.classList.remove('is-last-visible')
+              if (show) shown.push(item)
             }
-            block.hidden = visible === 0
+            // 구분선은 줄 사이에만 둔다. 뒤쪽이 숨겨지면 마지막으로 보이는 줄에서 선을 뗀다.
+            shown[shown.length - 1]?.classList.add('is-last-visible')
+            block.hidden = shown.length === 0
           }
           if (filter) {
             for (const button of Array.from(filter.querySelectorAll('button'))) {

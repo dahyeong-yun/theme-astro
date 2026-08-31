@@ -528,6 +528,14 @@ pre[data-language]::after {
   border-bottom: 1px solid var(--color-border);
 }
 
+/* 줄 사이를 나누는 선이므로 맨 끝에는 두지 않는다.
+   마지막 줄 아래에 선만 남으면 뒤에 뭔가 더 있다가 잘린 것처럼 보인다. */
+.doc-list > li:last-child,
+/* 필터로 뒤쪽이 숨겨졌을 때 마지막으로 보이는 줄. 스크립트가 붙여 준다. */
+.doc-list > li.is-last-visible {
+  border-bottom: none;
+}
+
 .doc-list > li[hidden] {
   display: none;
 }
