@@ -1,11 +1,17 @@
 ---
 import config from 'virtual:blog-config'
 import HeaderLink from './HeaderLink.astro'
+import SiteMark from './SiteMark.astro'
 ---
 
 <header>
   <nav>
-    <h2><a href="/">{config.site.title}</a></h2>
+    <h2>
+      <a href="/" aria-label={config.site.title}>
+        <SiteMark size={28} />
+        <span class="wordmark">{config.site.title}</span>
+      </a>
+    </h2>
     <div class="nav-right">
       <div class="nav-links">
         {config.navigation.map((item) => (
@@ -73,7 +79,12 @@ import HeaderLink from './HeaderLink.astro'
     font-weight: 700;
     letter-spacing: -0.02em;
   }
+  /* 마크와 글자가 한 링크다. 선이 currentColor 를 따르므로
+     hover 색 전환이 마크까지 함께 간다. */
   h2 a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     text-decoration: none;
     color: var(--color-text-header-hover);
     transition: color var(--transition-speed) var(--transition-timing);
@@ -115,6 +126,13 @@ import HeaderLink from './HeaderLink.astro'
     }
     .nav-right {
       gap: 0.4rem;
+    }
+  }
+  /* 좁은 화면에서는 마크만 남긴다. 링크의 aria-label 이 이름을 대신하므로
+     읽어주는 쪽에서는 그대로 "Polymorlog" 다. */
+  @media (max-width: 480px) {
+    .wordmark {
+      display: none;
     }
   }
 </style>
