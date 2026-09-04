@@ -58,3 +58,22 @@ export function sliceForPage<T>(items: T[], page: number): T[] {
 export function blogPageUrl(page: number): string {
   return page <= 1 ? '/blog' : `/blog/page/${page}`
 }
+
+/**
+ * 목록 머리말에 넣을 개수 문구.
+ *
+ * "이 쪽에 몇 편"은 페이지 크기라 알려주는 게 없다. 전체 안에서 지금 어디까지 왔는지를
+ * 범위로 말한다. 한 쪽뿐이면 범위가 곧 전체라 총계만 남긴다.
+ */
+export function rangeLabel(total: number, page: number): string {
+  if (total === 0) return ''
+  if (pageCount(total) === 1) return `글 ${total}편`
+
+  const size = postsPerPage()
+  const first = (page - 1) * size + 1
+  const last = Math.min(page * size, total)
+
+  return first === last
+    ? `${total}편 중 ${first}번째`
+    : `${total}편 중 ${first}–${last}번째`
+}

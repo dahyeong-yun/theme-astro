@@ -525,10 +525,10 @@ pre[data-language]::after {
 }
 
 /* 페이지 머리말 — PageHeader.astro 가 그린다 */
+/* 목록 위아래를 선으로 가두지 않는다. 줄 사이 구분선만으로 충분하고,
+   테두리를 두르면 목록이 표처럼 닫혀 보인다. 사이는 여백으로만 벌린다. */
 .page-head {
   margin-bottom: 2.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--color-border);
 }
 
 .page-head .eyebrow {

@@ -12,6 +12,7 @@ import {
   pageCount,
   sliceForPage,
   toDocListItem,
+  rangeLabel,
 } from '../../lib/posts.js'
 import { pageHeading } from '../../lib/nav.js'
 
@@ -33,7 +34,7 @@ const heading = pageHeading('/blog', { title: 'Blog' })
     <Header />
     <main class="page">
       <PageHeader title={heading.title} description={heading.description}>
-        <p class="count">글 {posts.length}편</p>
+        <p class="count">{rangeLabel(posts.length, 1)}</p>
       </PageHeader>
 
       <DocList items={items} showDescription emptyMessage="아직 쓴 글이 없습니다." />

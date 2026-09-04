@@ -12,6 +12,7 @@ import {
   pageCount,
   sliceForPage,
   toDocListItem,
+  rangeLabel,
 } from '../../../lib/posts.js'
 import { pageHeading } from '../../../lib/nav.js'
 
@@ -43,7 +44,7 @@ const heading = pageHeading('/blog', { title: 'Blog' })
     <Header />
     <main class="page">
       <PageHeader title={heading.title} description={heading.description}>
-        <p class="count">글 {postCount}편 · {page}/{total} 쪽</p>
+        <p class="count">{rangeLabel(postCount, page)}</p>
       </PageHeader>
 
       <DocList items={items} showDescription />
