@@ -13,6 +13,8 @@ export const wikiPageSchema = z.object({
   /** 위키링크에서 이 문서를 부를 수 있는 다른 이름들 */
   aliases: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
+  /** 이 문서가 속한 갈래들의 id. 같은 문서가 여러 갈래에 속할 수 있다. */
+  branches: z.array(z.string()).default([]),
   created: z.coerce.date().optional(),
   updated: z.coerce.date().optional(),
   /** 문서 성숙도. 지정하지 않으면 화면에 아무것도 표시하지 않는다. */

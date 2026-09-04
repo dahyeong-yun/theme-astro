@@ -13,6 +13,8 @@ export const blogPostSchema = z.object({
   ogImage: z.string().optional(),
   // 위키링크에서 이 글을 부를 수 있는 다른 이름들
   aliases: z.array(z.string()).default([]),
+  // 이 글이 속한 갈래들의 id. 포스트도 갈래에 걸어 둘 수 있다.
+  branches: z.array(z.string()).default([]),
   draft: z.boolean().default(false),
   slug: z.string().optional(),
   series: z.string().optional(),

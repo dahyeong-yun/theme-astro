@@ -1,0 +1,219 @@
+---
+/**
+ * 갈래 페이지.
+ *
+ * 위에는 자기 계보를 두어 어디쯤인지 보이게 하고,
+ * 본문(그 영역이 무엇인지 쓴 글) 다음에 하위 갈래와 속한 문서를 잇는다.
+ */
+import { getCollection, render } from 'astro:content'
+import config from 'virtual:blog-config'
+import BaseHead from '../../components/BaseHead.astro'
+import Footer from '../../components/Footer.astro'
+import Header from '../../components/Header.astro'
+import DocList from '../../components/DocList.astro'
+import { getBranchIndex, ancestryOf, countDocs } from '../../lib/branches.js'
+
+export async function getStaticPaths() {
+  let entries: any[] = []
+  try {
+    entries = (await getCollection('branches' as any)) ?? []
+  } catch {
+    return []
+  }
+
+  return entries
+    .filter((entry) => !entry.data.draft)
+    .map((entry) => {
+      const id = entry.id.replace(/^\/+|\/+$/g, '').replace(/\/index$/, '')
+      const slug = (entry.data.slug ?? id).replace(/^\/|\/$/g, '')
+      return { params: { slug }, props: { entry, id } }
+    })
+}
+
+const { entry, id } = Astro.props as any
+const { Content } = await render(entry)
+
+const index = await getBranchIndex()
+const node = index.byId.get(id)!
+const trail = ancestryOf(index, id)
+const parents = trail.slice(0, -1)
+
+const docItems = node.docs.map((doc) => ({
+  title: doc.title,
+  url: doc.url,
+  description: doc.description,
+  tags: doc.tags,
+}))
+
+// 갈래를 먼저 만들고 문서를 나중에 채우는 순서를 허용하기 때문에,
+// 아무것도 안 담긴 갈래가 정상적으로 존재할 수 있다. 빈 채로 두지 않고 말을 건다.
+const docCount = countDocs(node)
+const isEmpty = docCount === 0 && node.children.length === 0
+
+// 0 인 항목은 세지 않는다. "문서 0개 · 하위 갈래 1개" 처럼 읽히지 않도록.
+const stats = [
+  docCount > 0 ? `문서 ${docCount}개` : null,
+  node.children.length > 0 ? `하위 갈래 ${node.children.length}개` : null,
+].filter(Boolean)
+---
+
+<!doctype html>
+<html lang={config.site.language}>
+  <head>
+    <BaseHead
+      title={`${node.title} | 갈래 | ${config.site.title}`}
+      description={node.description ?? config.site.description}
+    />
+    <style>
+      .branch-head {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--color-border);
+      }
+      .eyebrow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem;
+        margin-bottom: 0.6rem;
+        font-size: 0.78rem;
+        color: var(--color-text-secondary);
+      }
+      .eyebrow .kind {
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--color-accent);
+        margin-right: 0.25rem;
+      }
+      .eyebrow a {
+        color: var(--color-text-secondary);
+        text-decoration: none;
+      }
+      .eyebrow a:hover {
+        color: var(--color-accent);
+      }
+      .eyebrow .sep {
+        opacity: 0.55;
+      }
+      .branch-head h1 {
+        margin: 0 0 0.6rem 0;
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+      }
+      .branch-desc {
+        margin: 0;
+        font-size: 1rem;
+        color: var(--color-text-body);
+        line-height: 1.6;
+      }
+      .stats {
+        margin: 0.75rem 0 0;
+        font-size: 0.82rem;
+        color: var(--color-text-secondary);
+        font-variant-numeric: tabular-nums;
+      }
+      .child-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 0.75rem;
+      }
+      .child-card {
+        display: block;
+        padding: 0.9rem 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        background: var(--color-surface);
+        text-decoration: none;
+        transition: border-color var(--transition-speed) var(--transition-timing),
+                    background-color var(--transition-speed) var(--transition-timing);
+      }
+      .child-card:hover {
+        border-color: var(--color-accent);
+        background: var(--color-surface-secondary);
+      }
+      .child-name {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.75rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--color-text-primary);
+      }
+      .child-count {
+        font-size: 0.8rem;
+        font-weight: 400;
+        color: var(--color-text-secondary);
+        font-variant-numeric: tabular-nums;
+        flex-shrink: 0;
+      }
+      .child-desc {
+        margin: 0.3rem 0 0;
+        font-size: 0.82rem;
+        color: var(--color-text-secondary);
+        line-height: 1.5;
+      }
+      .branch-body {
+        color: var(--color-text-primary);
+        margin-bottom: 2.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <Header />
+    <main class="page">
+      <div class="branch-head">
+        <div class="eyebrow">
+          <span class="kind">갈래</span>
+          {parents.map((parent) => (
+            <>
+              <a href={parent.url}>{parent.title}</a>
+              <span class="sep" aria-hidden="true">›</span>
+            </>
+          ))}
+        </div>
+        <h1>{node.title}</h1>
+        {node.description && <p class="branch-desc">{node.description}</p>}
+        {stats.length > 0 && <p class="stats">{stats.join(' · ')}</p>}
+      </div>
+
+      <div class="branch-body prose">
+        <Content />
+      </div>
+
+      {node.children.length > 0 && (
+        <section class="page-section">
+          <h2 class="section-title">하위 갈래</h2>
+          <div class="child-grid">
+            {node.children.map((child) => (
+              <a class="child-card" href={child.url}>
+                <span class="child-name">
+                  {child.title}
+                  <span class="child-count">{countDocs(child)}</span>
+                </span>
+                {child.description && <p class="child-desc">{child.description}</p>}
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {docItems.length > 0 && (
+        <section class="page-section">
+          <h2 class="section-title">이 갈래의 문서</h2>
+          <DocList items={docItems} showDescription />
+        </section>
+      )}
+
+      {isEmpty && (
+        <p class="empty-state">
+          아직 이 갈래에 담긴 문서가 없습니다. 자리를 먼저 잡아 둔 갈래입니다.
+        </p>
+      )}
+    </main>
+    <Footer />
+  </body>
+</html>

@@ -27,6 +27,25 @@ export interface DocIndex {
   resolver: Resolver
   /** `${kind}:${path}` → 그 문서를 가리키는 문서들 */
   backlinks: Map<string, DocRef[]>
+  /** `${kind}:${path}` → 그 문서가 가리키는 문서들 */
+  outgoing: Map<string, DocRef[]>
+}
+
+/**
+ * 한 문서를 둘러싼 이웃들.
+ *
+ * 링크는 방향이 있는데 화면에서는 그게 안 보이면 그냥 목록 두 개가 된다.
+ * 서로 건 문서(mutual)를 가장 가까운 사이로 앞에 두고, 한쪽 방향만 걸린 것을 뒤에 둔다.
+ */
+export interface RelatedDocs {
+  /** 서로 링크한 문서 */
+  mutual: DocRef[]
+  /** 이 문서가 가리키기만 하는 문서 */
+  outgoing: DocRef[]
+  /** 이 문서를 가리키기만 하는 문서 */
+  incoming: DocRef[]
+  /** 링크는 없지만 같은 분류에 있는 위키 문서 */
+  siblings: DocRef[]
 }
 
 export const POSTS_BASE = '/blog'
@@ -99,24 +118,31 @@ async function buildIndex(): Promise<DocIndex> {
   const resolver = buildResolver(docs)
   const byKey = new Map(docs.map((d) => [refKey(d.kind, d.path), d]))
   const backlinks = new Map<string, DocRef[]>()
+  const outgoing = new Map<string, DocRef[]>()
 
   for (const doc of docs) {
+    const from = refKey(doc.kind, doc.path)
     const seen = new Set<string>()
-    for (const link of extractWikilinks(bodies.get(refKey(doc.kind, doc.path)) ?? '')) {
+    for (const link of extractWikilinks(bodies.get(from) ?? '')) {
       if (!link.target) continue
       const target = resolver.resolve(link.target)
       if (!target) continue
       const key = refKey(target.kind, target.path)
-      if (key === refKey(doc.kind, doc.path)) continue  // 자기 참조는 제외
-      if (seen.has(key)) continue                        // 같은 문서를 여러 번 걸어도 한 번만
+      if (key === from) continue     // 자기 참조는 제외
+      if (seen.has(key)) continue    // 같은 문서를 여러 번 걸어도 한 번만
       seen.add(key)
-      const list = backlinks.get(key) ?? []
-      list.push(byKey.get(refKey(doc.kind, doc.path))!)
-      backlinks.set(key, list)
+
+      const inbound = backlinks.get(key) ?? []
+      inbound.push(byKey.get(from)!)
+      backlinks.set(key, inbound)
+
+      const forward = outgoing.get(from) ?? []
+      forward.push(byKey.get(key)!)
+      outgoing.set(from, forward)
     }
   }
 
-  return { docs, resolver, backlinks }
+  return { docs, resolver, backlinks, outgoing }
 }
 
 /** 문서 색인. 빌드 한 번에 한 번만 계산한다. */
@@ -128,9 +154,59 @@ export function getDocIndex(): Promise<DocIndex> {
 /** 이 문서를 가리키는 문서 목록. 포스트가 먼저, 그다음 제목순. */
 export async function getBacklinks(kind: DocKind, id: string): Promise<DocRef[]> {
   const { backlinks } = await getDocIndex()
-  const list = backlinks.get(refKey(kind, toDocPath(id))) ?? []
+  return sortRefs(backlinks.get(refKey(kind, toDocPath(id))) ?? [])
+}
+
+function sortRefs(list: DocRef[]): DocRef[] {
+  const locale = config.site.language || 'ko'
   return [...list].sort((a, b) => {
     if (a.kind !== b.kind) return a.kind === 'post' ? -1 : 1
-    return a.title.localeCompare(b.title, config.site.language || 'ko')
+    return a.title.localeCompare(b.title, locale)
   })
+}
+
+/** 위키 분류 = 최상위 폴더. 루트에 바로 놓인 문서는 분류가 없다. */
+function groupOf(docPath: string): string | null {
+  const segments = docPath.split('/').filter(Boolean)
+  return segments.length > 1 ? segments[0] : null
+}
+
+/**
+ * 문서를 둘러싼 이웃을 방향별로 모은다.
+ *
+ * 링크로 이어진 문서는 mutual → outgoing → incoming 순으로 가까운 사이다.
+ * 어느 쪽으로도 안 걸렸지만 같은 분류에 있는 위키 문서는 siblings 로 따로 둔다.
+ * 링크를 아직 안 건 문서만 있는 새 분류에서도 화면이 비지 않게 하려는 것이다.
+ */
+export async function getRelatedDocs(kind: DocKind, id: string): Promise<RelatedDocs> {
+  const { backlinks, outgoing, docs } = await getDocIndex()
+  const docPath = toDocPath(id)
+  const self = refKey(kind, docPath)
+
+  const out = outgoing.get(self) ?? []
+  const inc = backlinks.get(self) ?? []
+  const outKeys = new Set(out.map((d) => refKey(d.kind, d.path)))
+  const incKeys = new Set(inc.map((d) => refKey(d.kind, d.path)))
+
+  const mutual = out.filter((d) => incKeys.has(refKey(d.kind, d.path)))
+  const mutualKeys = new Set(mutual.map((d) => refKey(d.kind, d.path)))
+
+  const linked = new Set([...outKeys, ...incKeys])
+  const group = kind === 'wiki' ? groupOf(docPath) : null
+  const siblings = group
+    ? docs.filter(
+        (d) =>
+          d.kind === 'wiki' &&
+          d.path !== docPath &&
+          groupOf(d.path) === group &&
+          !linked.has(refKey(d.kind, d.path)),
+      )
+    : []
+
+  return {
+    mutual: sortRefs(mutual),
+    outgoing: sortRefs(out.filter((d) => !mutualKeys.has(refKey(d.kind, d.path)))),
+    incoming: sortRefs(inc.filter((d) => !mutualKeys.has(refKey(d.kind, d.path)))),
+    siblings: sortRefs(siblings),
+  }
 }

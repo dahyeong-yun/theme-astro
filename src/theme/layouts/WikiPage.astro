@@ -12,7 +12,8 @@ import Footer from '../components/Footer.astro'
 import FormattedDate from '../components/FormattedDate.astro'
 import Header from '../components/Header.astro'
 import TableOfContents from '../components/TableOfContents.astro'
-import Backlinks from '../components/Backlinks.astro'
+import WikiRelations from '../components/WikiRelations.astro'
+import BranchTrail from '../components/BranchTrail.astro'
 import CodeCopyScript from '../components/CodeCopyScript.astro'
 import { pageHeading } from '../lib/nav.js'
 
@@ -158,6 +159,7 @@ const wikiName = pageHeading(wikiBase, { title: config.wiki?.title ?? 'Wiki' }).
                 <span>작성 <FormattedDate date={created} timeFrom={gitCreated} /></span>
               )}
             </div>
+            {id && <BranchTrail kind="wiki" id={id} />}
             {tags.length > 0 && (
               <div class="tags">
                 {tags.map((tag) => (
@@ -172,14 +174,13 @@ const wikiName = pageHeading(wikiBase, { title: config.wiki?.title ?? 'Wiki' }).
             </div>
           )}
           <slot />
-          {id && <Backlinks kind="wiki" id={id} />}
+          {id && <WikiRelations kind="wiki" id={id} />}
         </div>
       </article>
-      {headings.length > 0 && (
-        <aside class="doc-aside">
-          <TableOfContents headings={headings} />
-        </aside>
-      )}
+      <aside class="doc-aside">
+        {headings.length > 0 && <TableOfContents headings={headings} />}
+        {id && <WikiRelations kind="wiki" id={id} compact />}
+      </aside>
     </main>
     <Footer />
     <CodeCopyScript />

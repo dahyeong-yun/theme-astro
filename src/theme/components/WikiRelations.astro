@@ -1,0 +1,263 @@
+---
+/**
+ * 위키 문서의 연결 지도.
+ *
+ * 백링크만 따로 붙이면 "이 문서를 가리키는 글" 목록 하나가 되고,
+ * 나가는 링크는 본문 안에 흩어져 남는다. 그러면 문서가 어디쯤 있는지가 안 보인다.
+ * 그래서 양방향을 한자리에 모으고, 관계의 방향을 기호로 구분한다.
+ *
+ * 순서는 가까운 사이부터다. 서로 건 문서 → 내가 건 문서 → 나를 건 문서 → 같은 분류.
+ */
+import { getRelatedDocs } from '../lib/collection-docs.js'
+import type { DocKind } from '../lib/wikilink.js'
+
+interface Props {
+  kind: DocKind
+  /** 컬렉션 엔트리 id (예: 'java-spring/hikaricp-pool-sizing') */
+  id: string
+  /** 사이드바용 축약형. 설명 없이 제목만 세로로 세운다. */
+  compact?: boolean
+}
+
+const { kind, id, compact = false } = Astro.props
+const related = await getRelatedDocs(kind, id)
+
+/** 사이드바는 좁으니 그룹당 이만큼만 세우고 나머지는 본문 아래 패널로 넘긴다. */
+const COMPACT_LIMIT = 5
+
+const all = [
+  { key: 'mutual', mark: '↔', label: '서로 연결됨', items: related.mutual },
+  { key: 'outgoing', mark: '→', label: '이 문서가 가리킴', items: related.outgoing },
+  { key: 'incoming', mark: '←', label: '이 문서를 가리킴', items: related.incoming },
+  { key: 'siblings', mark: '·', label: '같은 분류', items: related.siblings },
+].filter((group) => group.items.length > 0)
+
+const total = all.reduce((sum, group) => sum + group.items.length, 0)
+
+const groups = all.map((group) => ({
+  ...group,
+  shown: compact ? group.items.slice(0, COMPACT_LIMIT) : group.items,
+  hidden: compact ? Math.max(0, group.items.length - COMPACT_LIMIT) : 0,
+}))
+---
+
+{total > 0 && (
+  <section
+    class:list={['relations', { 'is-compact': compact }]}
+    aria-labelledby={compact ? 'relations-aside-heading' : 'relations-heading'}
+  >
+    <div class="relations-head">
+      <h2 id={compact ? 'relations-aside-heading' : 'relations-heading'}>연결</h2>
+      <span class="relations-count">{total}</span>
+    </div>
+
+    {groups.map((group) => (
+      <div class="rel-group">
+        <h3>
+          <span class={`rel-mark rel-mark-${group.key}`} aria-hidden="true">{group.mark}</span>
+          {group.label}
+        </h3>
+        <ul>
+          {group.shown.map((doc) => (
+            <li>
+              <a href={doc.url} title={compact ? doc.title : undefined}>
+                <span class="rel-title">{doc.title}</span>
+                <span class={`rel-kind rel-kind-${doc.kind}`}>
+                  {doc.kind === 'post' ? 'Post' : 'Wiki'}
+                </span>
+              </a>
+              {!compact && doc.description && <p class="rel-desc">{doc.description}</p>}
+            </li>
+          ))}
+          {group.hidden > 0 && (
+            <li class="rel-more">
+              <a href="#relations-heading">+{group.hidden} 더</a>
+            </li>
+          )}
+        </ul>
+      </div>
+    ))}
+  </section>
+)}
+
+<style>
+  .relations {
+    margin-top: 3.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--color-border);
+  }
+  .relations-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .relations-head h2 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+  .relations-count {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+  }
+
+  .rel-group + .rel-group {
+    margin-top: 1.5rem;
+  }
+  .rel-group h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin: 0 0 0.6rem 0;
+  }
+  .rel-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    line-height: 1;
+    background: var(--color-surface-secondary);
+    color: var(--color-text-secondary);
+  }
+  .rel-mark-mutual {
+    background: var(--color-badge-bg);
+    color: var(--color-accent);
+  }
+
+  .rel-group ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0.5rem;
+  }
+  .rel-group li {
+    margin: 0;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: 9px;
+    background: var(--color-surface);
+    transition: border-color var(--transition-speed) var(--transition-timing),
+                background-color var(--transition-speed) var(--transition-timing);
+  }
+  .rel-group li:hover {
+    border-color: var(--color-accent);
+    background: var(--color-surface-secondary);
+  }
+  .rel-group a {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.6rem;
+    text-decoration: none;
+    color: var(--color-text-primary);
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .rel-group li:hover .rel-title {
+    color: var(--color-accent);
+  }
+  .rel-title {
+    min-width: 0;
+    transition: color var(--transition-speed) var(--transition-timing);
+  }
+  .rel-kind {
+    flex-shrink: 0;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.08rem 0.34rem;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+  }
+  .rel-kind-wiki {
+    background: var(--color-badge-bg);
+    border-color: transparent;
+    color: var(--color-accent);
+  }
+  .rel-desc {
+    margin: 0.3rem 0 0 0;
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+
+  /* 사이드바 축약형: 목차 아래에 붙어 읽는 내내 보이는 쪽 */
+  .relations.is-compact {
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-border);
+  }
+  .is-compact .relations-head {
+    margin-bottom: 0.85rem;
+  }
+  .is-compact .rel-group + .rel-group {
+    margin-top: 1rem;
+  }
+  .is-compact .rel-group h3 {
+    font-size: 0.72rem;
+    margin-bottom: 0.4rem;
+  }
+  .is-compact .rel-mark {
+    width: 1.05rem;
+    height: 1.05rem;
+    font-size: 0.7rem;
+  }
+  .is-compact .rel-group ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .is-compact .rel-group li {
+    padding: 0.28rem 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+  }
+  .is-compact .rel-group li:hover {
+    background: none;
+  }
+  .is-compact .rel-group a {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    gap: 0.4rem;
+  }
+  .is-compact .rel-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .is-compact .rel-kind {
+    display: none;
+  }
+  .is-compact .rel-group li:hover a,
+  .is-compact .rel-group li:hover .rel-title {
+    color: var(--color-accent);
+  }
+  .is-compact .rel-more a {
+    font-size: 0.76rem;
+    color: var(--color-text-secondary);
+    opacity: 0.75;
+  }
+  .is-compact .rel-more a:hover {
+    color: var(--color-accent);
+    opacity: 1;
+  }
+</style>

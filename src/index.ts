@@ -96,6 +96,11 @@ export function blogTheme(config: BlogConfig): AstroIntegration {
           pattern: '/series/[slug]',
           entrypoint: themePage('series/[slug].astro'),
         })
+        // 갈래: 개념의 소속을 담는 상자. 상자 자체가 문서라서 라우트를 가진다.
+        injectRoute({
+          pattern: '/branch/[...slug]',
+          entrypoint: themePage('branch/[...slug].astro'),
+        })
 
         if (wikiEnabled) {
           injectRoute({
@@ -184,3 +189,4 @@ export type { BlogConfig, WikiConfig, ContentConfig } from './theme/types.js'
 export { blogPostSchema } from './theme/schemas/post.js'
 export { wikiPageSchema } from './theme/schemas/wiki.js'
 export { pageSchema } from './theme/schemas/page.js'
+export { branchSchema } from './theme/schemas/branch.js'

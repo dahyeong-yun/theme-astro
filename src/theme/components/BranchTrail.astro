@@ -1,0 +1,78 @@
+---
+/**
+ * 이 문서가 속한 갈래의 계보.
+ *
+ * 문서 제목 바로 아래(예전 태그 자리)에 놓는다. 문서를 열자마자
+ * "이게 어느 영역의 어디쯤인가"가 먼저 보이게 하려는 것이다.
+ *
+ * 한 문서가 여러 갈래에 속하면 계보도 여러 줄이 된다.
+ */
+import { getDocTrails } from '../lib/branches.js'
+import type { DocKind } from '../lib/wikilink.js'
+
+interface Props {
+  kind: DocKind
+  /** 컬렉션 엔트리 id */
+  id: string
+}
+
+const { kind, id } = Astro.props
+const trails = await getDocTrails(kind, id)
+---
+
+{trails.length > 0 && (
+  <nav class="branch-trails" aria-label="이 문서가 속한 갈래">
+    {trails.map((trail) => (
+      <ol class="trail">
+        {trail.map((node, depth) => (
+          <li>
+            {depth > 0 && <span class="sep" aria-hidden="true">›</span>}
+            <a href={node.url} title={node.description}>{node.title}</a>
+          </li>
+        ))}
+      </ol>
+    ))}
+  </nav>
+)}
+
+<style>
+  .branch-trails {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 0.85rem;
+  }
+  .trail {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+  .trail li {
+    display: flex;
+    align-items: center;
+    margin: 0;
+  }
+  .sep {
+    color: var(--color-text-secondary);
+    opacity: 0.55;
+    margin: 0 0.35rem;
+  }
+  .trail a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-speed) var(--transition-timing);
+  }
+  .trail a:hover {
+    color: var(--color-accent);
+  }
+  /* 마지막 칸이 이 문서를 직접 담고 있는 갈래다. 거기에 무게를 준다. */
+  .trail li:last-child a {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+</style>

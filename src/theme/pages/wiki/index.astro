@@ -185,9 +185,7 @@ const allTags = [...new Set(pages.flatMap((p) => p.tags ?? []))].sort((a, b) =>
       </PageHeader>
 
       {pages.length === 0 ? (
-        <p class="empty-state">
-          아직 위키 문서가 없습니다. <code>content/wiki/</code> 에 문서를 추가해 보세요.
-        </p>
+        <p class="empty-state">아직 정리해 둔 문서가 없습니다.</p>
       ) : (
         <>
           <section class="page-section">
