@@ -3,8 +3,12 @@
  * 위키 대문.
  *
  * 그냥 목록만 두면 눌러 들어왔을 때 여기가 어떤 곳인지 알 수 없다.
- * 무엇을 모아둔 곳인지 먼저 말하고, 분류로 들어가는 입구를 보여준 다음,
- * 최근에 손댄 문서와 전체 목록을 잇는다.
+ * 무엇을 모아둔 곳인지 먼저 말하고, 갈래로 들어가는 입구를 보여준 다음,
+ * 전체 목록을 잇는다.
+ *
+ * 문서를 묶는 축은 둘로 줄였다. 개념의 소속은 갈래가, 가로지르는 꼬리표는 태그가 맡는다.
+ * 폴더는 파일을 어디 뒀는지일 뿐이라 화면에 드러내지 않는다.
+ * 최근 갱신 목록은 대문(/)이 이미 같은 것을 보여주고 있어 여기서 뺐다.
  */
 import { getCollection } from 'astro:content'
 import config from 'virtual:blog-config'
@@ -15,6 +19,7 @@ import PageHeader from '../../components/PageHeader.astro'
 import DocList, { type DocListItem } from '../../components/DocList.astro'
 import { getGitCreated } from '../../lib/git-dates.js'
 import { pageHeading } from '../../lib/nav.js'
+import { getBranchIndex, countDocs } from '../../lib/branches.js'
 
 const wikiBase = (config.wiki?.basePath ?? '/wiki').replace(/\/+$/, '')
 // 내비에 적어 둔 문구가 있으면 그것을 쓰고, 없으면 wiki 설정을 쓴다.
@@ -32,52 +37,40 @@ try {
   entries = []
 }
 
-interface WikiItem extends DocListItem {
-  group: string
-  sortKey: number
-}
+const locale = config.site.language || 'ko'
 
-const pages: WikiItem[] = entries
+// 폴더는 파일을 어디 뒀는지일 뿐 개념의 묶음이 아니라, 목록을 폴더로 나누지 않는다.
+// 개념의 소속은 갈래가, 가로지르는 꼬리표는 태그가 맡는다.
+const pages: DocListItem[] = entries
   .filter((entry) => !entry.data.draft)
   .map((entry) => {
     const docPath = entry.id.replace(/^\/+|\/+$/g, '').replace(/\/index$/, '')
     const slug = (entry.data.slug ?? docPath).replace(/^\/|\/$/g, '')
-    const segments = docPath.split('/')
-    const updated = entry.data.updated ?? entry.data.created
     return {
       title: entry.data.title,
       url: `${wikiBase}/${slug}/`,
       description: entry.data.description,
-      date: updated,
+      date: entry.data.updated ?? entry.data.created,
       timeFrom: getGitCreated(entry.filePath),
       tags: entry.data.tags ?? [],
-      // 최상위 폴더를 분류로 쓴다. 루트에 바로 놓인 문서는 '기타'.
-      group: segments.length > 1 ? segments[0] : '기타',
-      sortKey: updated?.valueOf() ?? 0,
     }
   })
-
-const locale = config.site.language || 'ko'
-
-const groups = [...new Set(pages.map((p) => p.group))].sort((a, b) => {
-  if (a === '기타') return 1
-  if (b === '기타') return -1
-  return a.localeCompare(b, locale)
-})
-
-const byGroup = groups.map((group) => ({
-  group,
-  anchor: `category-${encodeURIComponent(group)}`,
-  items: pages
-    .filter((p) => p.group === group)
-    .sort((a, b) => a.title.localeCompare(b.title, locale)),
-}))
-
-const recent = [...pages].sort((a, b) => b.sortKey - a.sortKey).slice(0, 5)
+  // 최근 갱신순이 아니라 제목순이다. 이 목록은 이제 전체 색인이고,
+  // 색인은 아는 것을 찾는 자리다. 최근 갱신은 대문(/)이 맡는다.
+  .sort((a, b) => a.title.localeCompare(b.title, locale))
 
 const allTags = [...new Set(pages.flatMap((p) => p.tags ?? []))].sort((a, b) =>
   a.localeCompare(b, locale),
 )
+
+// 갈래는 최상위만 카드로 세운다. 대문은 입구지 목차가 아니다.
+// 다만 바로 아래 자식 이름은 카드 안에 깔아 준다. 최상위만 보이면
+// 갈래가 몇 겹인지 알 수 없어 폴더 분류와 구분이 안 된다.
+const branchIndex = await getBranchIndex()
+const rootBranches = branchIndex.roots.map((root) => ({
+  ...root,
+  total: countDocs(root),
+}))
 ---
 
 <!doctype html>
@@ -94,41 +87,55 @@ const allTags = [...new Set(pages.flatMap((p) => p.tags ?? []))].sort((a, b) =>
         color: var(--color-text-secondary);
         font-variant-numeric: tabular-nums;
       }
-      .category-grid {
+      .branch-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
         gap: 0.75rem;
       }
-      .category-card {
+      .branch-card {
+        display: block;
+        padding: 0.9rem 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        background: var(--color-surface);
+        text-decoration: none;
+        transition: border-color var(--transition-speed) var(--transition-timing),
+                    background-color var(--transition-speed) var(--transition-timing);
+      }
+      .branch-card:hover {
+        border-color: var(--color-accent);
+        background: var(--color-surface-secondary);
+      }
+      .branch-name {
         display: flex;
         align-items: baseline;
         justify-content: space-between;
         gap: 0.75rem;
-        padding: 0.9rem 1rem;
-        border: 1px solid var(--color-border);
-        border-radius: 10px;
-        text-decoration: none;
-        background: var(--color-surface);
-        transition: border-color var(--transition-speed) var(--transition-timing),
-                    background-color var(--transition-speed) var(--transition-timing);
-      }
-      .category-card:hover {
-        border-color: var(--color-accent);
-        background: var(--color-surface-secondary);
-      }
-      .category-name {
         font-size: 0.95rem;
         font-weight: 600;
         color: var(--color-text-primary);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
       }
-      .category-count {
+      .branch-count {
         font-size: 0.8rem;
+        font-weight: 400;
         color: var(--color-text-secondary);
         font-variant-numeric: tabular-nums;
         flex-shrink: 0;
+      }
+      .branch-desc {
+        margin: 0.3rem 0 0;
+        font-size: 0.82rem;
+        color: var(--color-text-secondary);
+        line-height: 1.5;
+      }
+      /* 바로 아래 갈래 이름만 깔아 둔다. 링크로 만들면 카드 안에 링크가
+         겹쳐 눌리는 곳이 헷갈린다. 여기서는 지도의 모양만 보여준다. */
+      .branch-children {
+        margin: 0.5rem 0 0;
+        font-size: 0.78rem;
+        color: var(--color-text-secondary);
+        opacity: 0.75;
+        line-height: 1.5;
       }
       .tag-filter {
         display: flex;
@@ -158,21 +165,6 @@ const allTags = [...new Set(pages.flatMap((p) => p.tags ?? []))].sort((a, b) =>
         border-color: transparent;
         background: var(--color-badge-bg);
       }
-      .category-block + .category-block {
-        margin-top: 2rem;
-      }
-      .category-block[hidden] {
-        display: none;
-      }
-      .category-block h3 {
-        font-size: 0.78rem;
-        font-weight: 600;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--color-text-secondary);
-        margin: 0 0 0.75rem;
-        scroll-margin-top: 5rem;
-      }
     </style>
   </head>
   <body>
@@ -180,7 +172,10 @@ const allTags = [...new Set(pages.flatMap((p) => p.tags ?? []))].sort((a, b) =>
     <main class="page">
       <PageHeader title={wikiTitle} description={wikiDescription}>
         {pages.length > 0 && (
-          <p class="stats">문서 {pages.length}개 · 분류 {groups.length}개</p>
+          <p class="stats">
+            문서 {pages.length}개
+            {rootBranches.length > 0 && ` · 갈래 ${rootBranches.length}개`}
+          </p>
         )}
       </PageHeader>
 
@@ -188,22 +183,27 @@ const allTags = [...new Set(pages.flatMap((p) => p.tags ?? []))].sort((a, b) =>
         <p class="empty-state">아직 정리해 둔 문서가 없습니다.</p>
       ) : (
         <>
-          <section class="page-section">
-            <h2 class="section-title">분류</h2>
-            <div class="category-grid">
-              {byGroup.map(({ group, anchor, items }) => (
-                <a class="category-card" href={`#${anchor}`}>
-                  <span class="category-name">{group}</span>
-                  <span class="category-count">{items.length}</span>
-                </a>
-              ))}
-            </div>
-          </section>
-
-          <section class="page-section">
-            <h2 class="section-title">최근 갱신</h2>
-            <DocList items={recent} showDescription />
-          </section>
+          {rootBranches.length > 0 && (
+            <section class="page-section">
+              <h2 class="section-title">갈래</h2>
+              <div class="branch-grid">
+                {rootBranches.map((root) => (
+                  <a class="branch-card" href={root.url}>
+                    <span class="branch-name">
+                      {root.title}
+                      <span class="branch-count">{root.total}</span>
+                    </span>
+                    {root.description && <p class="branch-desc">{root.description}</p>}
+                    {root.children.length > 0 && (
+                      <p class="branch-children">
+                        {root.children.map((child) => child.title).join(' · ')}
+                      </p>
+                    )}
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section class="page-section">
             <h2 class="section-title">전체 문서</h2>
@@ -215,12 +215,8 @@ const allTags = [...new Set(pages.flatMap((p) => p.tags ?? []))].sort((a, b) =>
                 ))}
               </div>
             )}
-            {byGroup.map(({ group, anchor, items }) => (
-              <div class="category-block" data-group={group}>
-                <h3 id={anchor}>{group}</h3>
-                <DocList items={items} />
-              </div>
-            ))}
+            <DocList items={pages} showDescription />
+            <p class="no-match" hidden>고른 태그에 해당하는 문서가 없습니다.</p>
           </section>
         </>
       )}
@@ -231,23 +227,27 @@ const allTags = [...new Set(pages.flatMap((p) => p.tags ?? []))].sort((a, b) =>
       // 태그 필터. ?tag=... 로 들어와도 같은 상태가 되도록 URL 과 맞춘다.
       function setupWikiFilter() {
         const filter = document.getElementById('tag-filter')
-        const blocks = Array.from(document.querySelectorAll<HTMLElement>('.category-block'))
-        if (blocks.length === 0) return
+        const list = document.querySelector<HTMLElement>('.doc-list')
+        const noMatch = document.querySelector<HTMLElement>('.no-match')
+        if (!list) return
+
+        const items = Array.from(list.querySelectorAll<HTMLElement>(':scope > li'))
 
         function apply(tag: string) {
-          for (const block of blocks) {
-            const shown: HTMLElement[] = []
-            for (const item of Array.from(block.querySelectorAll<HTMLElement>('.doc-list > li'))) {
-              const tags = (item.dataset.tags || '').split('|').filter(Boolean)
-              const show = !tag || tags.includes(tag)
-              item.hidden = !show
-              item.classList.remove('is-last-visible')
-              if (show) shown.push(item)
-            }
-            // 구분선은 줄 사이에만 둔다. 뒤쪽이 숨겨지면 마지막으로 보이는 줄에서 선을 뗀다.
-            shown[shown.length - 1]?.classList.add('is-last-visible')
-            block.hidden = shown.length === 0
+          const shown: HTMLElement[] = []
+          for (const item of items) {
+            const tags = (item.dataset.tags || '').split('|').filter(Boolean)
+            const show = !tag || tags.includes(tag)
+            item.hidden = !show
+            item.classList.remove('is-last-visible')
+            if (show) shown.push(item)
           }
+          // 구분선은 줄 사이에만 둔다. 뒤쪽이 숨겨지면 마지막으로 보이는 줄에서 선을 뗀다.
+          shown[shown.length - 1]?.classList.add('is-last-visible')
+
+          list.hidden = shown.length === 0
+          if (noMatch) noMatch.hidden = shown.length > 0
+
           if (filter) {
             for (const button of Array.from(filter.querySelectorAll('button'))) {
               button.setAttribute(
