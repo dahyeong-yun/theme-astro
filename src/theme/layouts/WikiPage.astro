@@ -15,6 +15,7 @@ import TableOfContents from '../components/TableOfContents.astro'
 import WikiRelations from '../components/WikiRelations.astro'
 import BranchTrail from '../components/BranchTrail.astro'
 import CodeCopyScript from '../components/CodeCopyScript.astro'
+import MermaidScript from '../components/MermaidScript.astro'
 import { pageHeading } from '../lib/nav.js'
 
 interface Props {
@@ -184,5 +185,6 @@ const wikiName = pageHeading(wikiBase, { title: config.wiki?.title ?? 'Wiki' }).
     </main>
     <Footer />
     <CodeCopyScript />
+    <MermaidScript />
   </body>
 </html>

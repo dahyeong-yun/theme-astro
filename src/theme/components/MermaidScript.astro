@@ -1,0 +1,146 @@
+---
+/**
+ * ```mermaid 코드 블록을 다이어그램으로 그리는 스크립트.
+ * 본문을 렌더링하는 레이아웃에서 CodeCopyScript 와 함께 쓴다.
+ *
+ * markdown.syntaxHighlight.excludeLangs 에 'mermaid' 를 넣어 두었기 때문에
+ * shiki 가 건드리지 않은 <pre><code class="language-mermaid"> 원본이 그대로 남는다.
+ * 여기서 그 원본을 읽어 그림으로 바꾼다.
+ *
+ * mermaid 는 SVG 에 색을 직접 박아 넣는다. 그래서 테마가 바뀌면 CSS 로는 못 고치고
+ * 원본에서 다시 그려야 한다. 원본 문자열을 계속 들고 있는 이유다.
+ */
+---
+
+<script>
+  const SELECTOR = 'pre > code.language-mermaid'
+
+  /** { el: 그림이 들어갈 자리, src: 원본 } — 테마가 바뀌면 이걸로 다시 그린다. */
+  const blocks: { el: HTMLElement; src: string }[] = []
+  let mermaid: any = null
+  let seq = 0
+  /** 다시 그리는 도중 테마가 또 바뀌면 앞선 배치의 결과는 버린다. */
+  let token = 0
+
+  /** 원본 pre 를 figure 로 갈아끼우고 소스를 챙긴다. 하나라도 찾았는지 돌려준다. */
+  function collect(): boolean {
+    document.querySelectorAll(SELECTOR).forEach((code) => {
+      const pre = code.parentElement
+      if (!pre) return
+
+      const figure = document.createElement('figure')
+      figure.className = 'mermaid-diagram'
+      // mermaid 는 소스에 accTitle/accDescr 이 있을 때만 title/desc 를 넣는다.
+      // 그게 없어도 최소한 하나의 묶음으로는 읽히게 role 을 준다.
+      figure.setAttribute('role', 'group')
+
+      const body = document.createElement('div')
+      body.className = 'mermaid-diagram__body'
+      figure.appendChild(body)
+
+      pre.replaceWith(figure)
+      // 원본은 DOM 이 아니라 여기에 둔다. data 속성에 넣으면 이스케이프를 신경 써야 하고
+      // 본문 검색·스크린리더에 같은 글이 두 번 잡힌다.
+      blocks.push({ el: body, src: code.textContent ?? '' })
+    })
+    return blocks.length > 0
+  }
+
+  function configure() {
+    const root = getComputedStyle(document.documentElement)
+    const fontFamily = root.getPropertyValue('--font-sans').trim()
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark'
+
+    // initialize 는 매번 기본값에서 다시 시작한다(내부적으로 setSiteConfig).
+    // 그래서 바뀐 값만 넘기면 안 되고 항상 전체를 넘겨야 한다.
+    mermaid.initialize({
+      // mermaid 모듈은 window load 에 스스로 run() 을 건다. 우리가 직접 그리므로 끈다.
+      startOnLoad: false,
+      // 출력이 DOMPurify 를 지나게 둔다. 1차 콘텐츠라도 굳이 풀 이유가 없다.
+      securityLevel: 'strict',
+      // 기본값이면 파싱 실패 시 에러 SVG 를 담은 임시 div 가 정리되기 전에 예외가 나서
+      // document.body 에 그대로 남는다. 켜 두면 양쪽 실패 경로 모두 정리하고 던진다.
+      suppressErrorRendering: true,
+      // 사이트 팔레트에서 색을 파생시키지 않는다. 사이트 토큰이 무채색이라
+      // mermaid 의 hue 회전이 무의미해지고 순검정 배경에서 테두리가 검게 뭉갠다.
+      theme: dark ? 'dark' : 'default',
+      fontFamily: fontFamily || 'system-ui, sans-serif',
+      themeVariables: { fontSize: '15px' },
+    })
+  }
+
+  /**
+   * 본문 폭보다 넓은 그림은 줄이지 말고 가로 스크롤에 태운다.
+   *
+   * mermaid 는 useMaxWidth 기본값대로 svg 에 width="100%" 와
+   * style="max-width: {자연폭}px" 를 쓴다. 본문 폭에 들어가는 그림은 그대로 두면 되고,
+   * 넘치는 그림만 자연폭으로 되돌린다. 참여자가 많은 시퀀스 다이어그램은 폭이
+   * 2000px 을 쉽게 넘어서, 720px 에 맞춰 줄이면 글자가 읽을 수 없게 작아진다.
+   */
+  function fitWidth(el: HTMLElement) {
+    const svg = el.querySelector('svg')
+    if (!svg) return
+    const natural = Number.parseFloat(svg.style.maxWidth)
+    if (Number.isFinite(natural) && natural > el.clientWidth) {
+      svg.style.width = `${natural}px`
+      svg.style.maxWidth = 'none'
+    }
+  }
+
+  async function renderAll() {
+    const mine = ++token
+    configure()
+
+    for (const { el, src } of blocks) {
+      if (mine !== token) return
+
+      // id 는 매번 새로 만든다. mermaid 는 그리기 전에 같은 id 의 기존 요소를 지우기 때문에
+      // id 를 재사용하면 새 그림이 나오기 전까지 화면이 한 번 빈다.
+      const id = `pm-mermaid-${++seq}`
+      try {
+        // 컨테이너를 넘기지 않는다. 넘기면 mermaid 가 먼저 innerHTML 을 비워서
+        // 다시 그리는 동안 자리가 빈다. 안 넘기면 body 에 임시 div 를 붙여 재고 지운다.
+        const { svg, bindFunctions } = await mermaid.render(id, src)
+        if (mine !== token) return
+        el.innerHTML = svg
+        bindFunctions?.(el)
+        fitWidth(el)
+        el.parentElement?.classList.remove('is-error')
+      } catch (err) {
+        if (mine !== token) return
+        // 한 다이어그램이 깨져도 페이지는 살아 있어야 한다. 원본을 그대로 돌려준다.
+        console.error('[mermaid] 다이어그램을 그리지 못했다', err)
+        const pre = document.createElement('pre')
+        pre.textContent = src
+        el.replaceChildren(pre)
+        el.parentElement?.classList.add('is-error')
+      }
+    }
+  }
+
+  async function setup() {
+    // 다이어그램이 없는 페이지에서는 mermaid 를 아예 받지 않는다.
+    // import 가 이 판정 뒤에 있어야 지연 로딩이 성립한다.
+    if (!collect()) return
+
+    mermaid = (await import('mermaid')).default
+    await renderAll()
+
+    // 테마 토글은 이벤트를 쏘지 않는다. html 의 data-theme 변화를 직접 본다.
+    new MutationObserver(() => {
+      void renderAll()
+    }).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    })
+  }
+
+  // 최초 로드 및 Astro 페이지 전환 대응
+  document.addEventListener('astro:page-load', setup)
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setup)
+  } else {
+    setup()
+  }
+</script>

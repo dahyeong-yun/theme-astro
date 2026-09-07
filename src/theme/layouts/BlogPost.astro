@@ -10,6 +10,7 @@ import TableOfContents from '../components/TableOfContents.astro'
 import SeriesBox from '../components/SeriesBox.astro'
 import Backlinks from '../components/Backlinks.astro'
 import CodeCopyScript from '../components/CodeCopyScript.astro'
+import MermaidScript from '../components/MermaidScript.astro'
 
 type Props = CollectionEntry<'posts'>['data'] & {
   headings?: { depth: number; slug: string; text: string }[];
@@ -108,5 +109,6 @@ const { title, description, date, updated, banner, ogImage, headings = [], serie
     </main>
     <Footer />
     <CodeCopyScript />
+    <MermaidScript />
   </body>
 </html>

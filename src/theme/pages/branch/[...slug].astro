@@ -11,6 +11,8 @@ import BaseHead from '../../components/BaseHead.astro'
 import Footer from '../../components/Footer.astro'
 import Header from '../../components/Header.astro'
 import DocList from '../../components/DocList.astro'
+import CodeCopyScript from '../../components/CodeCopyScript.astro'
+import MermaidScript from '../../components/MermaidScript.astro'
 import { getBranchIndex, ancestryOf, countDocs } from '../../lib/branches.js'
 
 export async function getStaticPaths() {
@@ -215,5 +217,7 @@ const stats = [
       )}
     </main>
     <Footer />
+    <CodeCopyScript />
+    <MermaidScript />
   </body>
 </html>

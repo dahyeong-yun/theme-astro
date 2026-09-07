@@ -438,6 +438,89 @@ pre[data-language]::after {
 }
 
 /* ============================================================
+   Mermaid — ```mermaid 코드 블록이 그림으로 바뀐다
+   (MermaidScript.astro 가 pre 를 figure 로 갈아끼운다)
+   ============================================================ */
+
+/* 스크립트가 돌기 전 잠깐 보이는 원본, 그리고 JS 가 꺼진 환경의 최종 모습.
+   코드 카드 장식을 눌러 두어 그림 자리가 튀지 않게 한다. */
+pre:has(> code.language-mermaid) {
+  border-color: var(--color-border-hairline);
+  box-shadow: none;
+  color: var(--color-text-secondary);
+  opacity: 0.55;
+}
+
+figure.mermaid-diagram {
+  /* flex 로 두면 자식이 shrink-to-fit 이 되고, svg 의 width:100% 가 그 폭을 되물어
+     교착에 빠져 SVG 기본폭 300px 로 주저앉는다. 블록으로 두고 폭을 명시한다. */
+  display: block;
+  margin: 1.75rem 0;
+  padding: 0;
+}
+
+.mermaid-diagram__body {
+  width: 100%;
+  /* 본문 폭보다 넓은 그림은 줄여서 뭉개지 말고 가로로 넘긴다.
+     시퀀스 다이어그램은 참여자가 늘면 폭이 쉽게 2000px 을 넘는데,
+     그걸 720px 에 우겨넣으면 글자가 4px 이 되어 아무것도 못 읽는다. */
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* 최종 높이는 그려 봐야 알기 때문에 레이아웃 이동을 완전히 없앨 수는 없다.
+     0 에서 튀어오르는 것만 막는다. */
+  min-height: 4rem;
+}
+
+/* mermaid 는 svg 에 width="100%" 와 style="max-width: {자연폭}px" 를 직접 쓴다.
+   본문 폭에 들어가는 그림은 이 상태로 가운데 놓이고, 넘치는 그림만
+   MermaidScript 가 자연폭으로 되돌려 위 overflow-x 에 태운다. */
+.mermaid-diagram__body > svg {
+  display: block;
+  margin: 0 auto;
+  height: auto;
+}
+
+/* 그리기에 실패하면 원본을 그대로 돌려준다. 페이지가 비지 않는 게 우선이다. */
+.mermaid-diagram.is-error .mermaid-diagram__body {
+  overflow: visible;
+  width: 100%;
+}
+.mermaid-diagram.is-error pre {
+  border-color: var(--color-error);
+  opacity: 1;
+}
+
+/* mermaid 의 노드 라벨은 foreignObject 안의 <p> 다.
+   본문 p/li 타이포그래피(17px, 자간, 색)가 그대로 새어 들어 라벨을 망친다.
+   [id^="dpm-mermaid-"] 는 mermaid 가 크기를 재려고 body 에 잠깐 붙이는 임시 div 다
+   (id 가 'd' + 우리가 준 id). 재는 시점과 보이는 시점에 같은 규칙이 걸려야
+   라벨 폭이 어긋나 잘리지 않는다. */
+.mermaid-diagram foreignObject p,
+.mermaid-diagram foreignObject li,
+.mermaid-diagram foreignObject span,
+[id^="dpm-mermaid-"] foreignObject p,
+[id^="dpm-mermaid-"] foreignObject li,
+[id^="dpm-mermaid-"] foreignObject span {
+  font-size: inherit;
+  line-height: inherit;
+  letter-spacing: normal;
+  color: inherit;
+  margin: 0;
+}
+
+/* 그 임시 측정용 div. 레이아웃은 살아 있어야 getBBox 가 맞으므로
+   display: none 이 아니라 opacity 로 감춘다. */
+body > div[id^="dpm-mermaid-"] {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ============================================================
    Utilities
    ============================================================ */
 .sr-only {

@@ -121,10 +121,10 @@ export function blogTheme(config: BlogConfig): AstroIntegration {
           site: config.site.url,
           output: 'static',
           integrations: [
-            mdx({
-              remarkPlugins: remarkPlugins as any,
-              rehypePlugins: [rehypeKatex],
-            }),
+            // remark/rehype 플러그인은 아래 markdown.processor 한 곳에서만 정한다.
+            // mdx() 는 extendMarkdownConfig 기본값(true)으로 그 processor 를 그대로
+            // 물려받는다. 여기에 다시 적으면 deprecation 경고가 나고 설정 자리가 둘로 갈라진다.
+            mdx(),
             sitemap(),
             ...((config.analytics?.gtm?.id || config.analytics?.ga?.id)
               ? [
@@ -138,18 +138,33 @@ export function blogTheme(config: BlogConfig): AstroIntegration {
           ],
           markdown: {
             // Astro 7 의 기본 처리기(Sätteri)는 remark/rehype 플러그인을 돌리지 않는다.
-            // .mdx 는 mdx() 통합이 unified 로 처리하지만 .md 는 여기서 지정해 줘야
-            // 위키링크·수식·수정시각 플러그인이 동일하게 적용된다.
+            // .md 는 여기서 처리기를 지정해 줘야 위키링크·수식 플러그인이 걸리고,
+            // .mdx 는 mdx() 가 이 processor 를 물려받아 같은 파이프라인을 쓴다.
+            // 플러그인을 추가할 곳은 여기 하나뿐이다.
             processor: unified({
               remarkPlugins: remarkPlugins as any,
               rehypePlugins: [rehypeKatex],
             }),
+            // shiki 를 건너뛴 언어는 <pre><code class="language-X"> 원본 그대로 남는다.
+            // mermaid 는 그 원본이 있어야 브라우저에서 그림으로 바꿀 수 있다(MermaidScript).
+            // 이 설정은 .md 와 .mdx 가 함께 읽는 공유 설정이라 한 번만 적으면 된다.
+            // 'math' 는 Astro 의 기본 제외 목록이라 명시적으로 다시 적어 준다.
+            syntaxHighlight: {
+              type: 'shiki',
+              excludeLangs: ['math', 'mermaid'],
+            },
             shikiConfig: {
               theme: config.theme?.codeTheme ?? 'tokyo-night',
               wrap: true,
             },
           },
           vite: {
+            // mermaid 는 테마의 의존성이다. 블로그 레포 기준으로는 바로 풀리지 않아
+            // 'mermaid' 라고만 적으면 해석 실패 경고가 난다. 'theme-astro > mermaid' 는
+            // 테마를 먼저 찾고 그 안에서 mermaid 를 찾는 중첩 표기라 양쪽에서 다 풀린다.
+            // 미리 번들에 넣어 두지 않으면 첫 다이어그램 페이지에서 Vite 가
+            // 의존성을 다시 최적화하며 페이지를 통째로 새로고침한다.
+            optimizeDeps: { include: ['theme-astro > mermaid'] },
             plugins: [
               {
                 name: 'virtual:blog-config',

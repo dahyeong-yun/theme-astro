@@ -11,6 +11,7 @@ import Footer from '../components/Footer.astro'
 import Header from '../components/Header.astro'
 import PageHeader from '../components/PageHeader.astro'
 import CodeCopyScript from '../components/CodeCopyScript.astro'
+import MermaidScript from '../components/MermaidScript.astro'
 
 interface Props {
   title: string
@@ -42,5 +43,6 @@ const { title, description, eyebrow, image } = Astro.props
     </main>
     <Footer />
     <CodeCopyScript />
+    <MermaidScript />
   </body>
 </html>
