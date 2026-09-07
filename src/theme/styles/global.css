@@ -461,9 +461,7 @@ figure.mermaid-diagram {
 
 .mermaid-diagram__body {
   width: 100%;
-  /* 본문 폭보다 넓은 그림은 줄여서 뭉개지 말고 가로로 넘긴다.
-     시퀀스 다이어그램은 참여자가 늘면 폭이 쉽게 2000px 을 넘는데,
-     그걸 720px 에 우겨넣으면 글자가 4px 이 되어 아무것도 못 읽는다. */
+  /* 처음에는 본문 폭에 맞춰 두고, 확대했을 때만 가로로 넘긴다. */
   overflow-x: auto;
   overflow-y: hidden;
   /* 최종 높이는 그려 봐야 알기 때문에 레이아웃 이동을 완전히 없앨 수는 없다.
@@ -471,13 +469,54 @@ figure.mermaid-diagram {
   min-height: 4rem;
 }
 
-/* mermaid 는 svg 에 width="100%" 와 style="max-width: {자연폭}px" 를 직접 쓴다.
-   본문 폭에 들어가는 그림은 이 상태로 가운데 놓이고, 넘치는 그림만
-   MermaidScript 가 자연폭으로 되돌려 위 overflow-x 에 태운다. */
+/* 폭은 MermaidScript 가 배율에 맞춰 직접 정한다. 맞춤 상태에서는 가운데 놓고,
+   확대해서 넘칠 때는 왼쪽부터 보이게 가운데 정렬을 푼다. */
 .mermaid-diagram__body > svg {
   display: block;
   margin: 0 auto;
   height: auto;
+}
+.mermaid-diagram__body.is-zoomed > svg {
+  margin: 0;
+}
+
+/* 확대 컨트롤. 본문 폭에 다 들어가는 그림에는 나오지 않는다.
+   그림 위에 겹치면 내용을 가리므로 아래에 붙인다. */
+.mermaid-diagram__zoom {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.mermaid-diagram__zoom button {
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+}
+
+.mermaid-diagram__zoom button:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+}
+
+/* 배율 표시가 곧 '맞춤으로 되돌리기' 버튼이다. */
+.mermaid-diagram__zoom .is-label {
+  min-width: 3.25rem;
+  font-variant-numeric: tabular-nums;
 }
 
 /* 그리기에 실패하면 원본을 그대로 돌려준다. 페이지가 비지 않는 게 우선이다. */
