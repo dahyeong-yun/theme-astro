@@ -29,6 +29,9 @@ Astro 블로그 테마. 라우트·레이아웃·스키마를 테마가 모두 �
 
 두 컬렉션은 서로 자유롭게 링크할 수 있고, 백링크도 종류를 가리지 않는다.
 
+여기에 [갈래](#갈래)(`content/branches/`)가 하나 더 있다. 글이라기보다 **글을 담는
+상자**인데, 그 자체로 제목·설명·본문을 갖는 문서이기도 하다.
+
 ### 블로그 레포 설정
 
 `src/content.config.ts`:
@@ -36,7 +39,7 @@ Astro 블로그 테마. 라우트·레이아웃·스키마를 테마가 모두 �
 ```ts
 import { defineCollection } from 'astro:content'
 import { glob } from 'astro/loaders'
-import { blogPostSchema, wikiPageSchema } from 'theme-astro'
+import { blogPostSchema, wikiPageSchema, pageSchema, branchSchema } from 'theme-astro'
 
 export const collections = {
   posts: defineCollection({
@@ -47,6 +50,11 @@ export const collections = {
     loader: glob({ base: './content/wiki', pattern: '**/*.{md,mdx}' }),
     schema: wikiPageSchema,
   }),
+  // 개념의 소속. 없으면 갈래 기능 전체가 조용히 꺼진다
+  branches: defineCollection({
+    loader: glob({ base: './content/branches', pattern: '**/*.{md,mdx}' }),
+    schema: branchSchema,
+  }),
   // About 처럼 날짜가 의미 없는 단독 페이지
   pages: defineCollection({
     loader: glob({ base: './content/pages', pattern: '**/*.{md,mdx}' }),
@@ -55,7 +63,10 @@ export const collections = {
 }
 ```
 
-`import { blogPostSchema, wikiPageSchema, pageSchema } from 'theme-astro'` 로 가져온다.
+스키마는 모두 `theme-astro` 에서 가져온다.
+
+`branches` 를 빼도 빌드는 통과한다 — 색인이 빈 배열로 떨어지게 해 뒀다. 대신
+[갈래](#갈래) 관련 화면이 전부 안 나오므로, 안 나온다면 여기부터 확인한다.
 
 `/about` 본문은 `content/pages/about.md` 에서 온다. 블로그마다 다를 수밖에 없는
 글을 테마가 들고 있으면 고칠 수가 없다. frontmatter 의 `title` / `description` 을
@@ -138,6 +149,7 @@ draft: false
 title: 문서 제목
 description: 한 줄 요약
 aliases: [다른 이름, another name]
+branches: [db-connection]            # 이 문서가 속한 갈래. 여러 개 적을 수 있다
 tags: [db]
 created: 2026-07-01
 updated: 2026-08-20
@@ -146,8 +158,97 @@ draft: false
 ---
 ```
 
-위키 인덱스는 `content/wiki/` 의 **최상위 폴더명**으로 문서를 묶는다.
-루트에 바로 놓인 문서는 `기타` 로 간다.
+위키 인덱스는 **폴더로 묶지 않는다.** 폴더는 파일을 어디 뒀는지일 뿐이라
+화면에 드러내지 않는다. 문서를 묶는 축은 둘이다 — 개념의 소속은 [갈래](#갈래)가,
+가로지르는 꼬리표는 `tags` 가 맡는다. 인덱스는 갈래 카드 + 제목순 전체 목록
+(태그 필터 포함)으로 그린다.
+
+`branches` 는 포스트 스키마에도 있지만 포스트 화면에는 계보가 붙지 않는다.
+[갈래 — 아직 안 된 것](#아직-안-된-것) 참고.
+
+## 갈래
+
+문서가 **어느 개념 아래 있는가**를 나타내는 중첩 구조다. 태그를 대신한다.
+
+| | 갈래 | 태그 | 시리즈 |
+| --- | --- | --- | --- |
+| 무엇 | 개념의 소속 | 가로지르는 꼬리표 | 읽는 순서 |
+| 중첩 | `parent` 로 겹겹이 | 평평함 | 평평함 |
+| 자기 설명 | 문서다 (제목·설명·본문) | 이름뿐 | 제목뿐 |
+| 한 문서가 여럿에 | **된다** | 된다 | 하나만 |
+
+### 갈래 만들기
+
+갈래 하나가 파일 하나다. `content/branches/<id>.md` 이고, 파일명이 곧 id 다.
+
+```yaml
+---
+title: DB 커넥션 다루기
+description: 애플리케이션이 DB 커넥션을 얻고, 쥐고, 돌려주는 과정에서 생기는 문제들
+parent: spring-runtime   # 없으면 최상위 갈래
+order: 1                 # 형제 사이 순서. 없으면 제목 가나다순
+slug: db-connection      # 선택. 없으면 id 를 URL 로 쓴다
+draft: false
+---
+
+본문을 쓰면 갈래 페이지에 그대로 나온다. 이 영역이 무엇인지 적는 자리다.
+```
+
+문서는 frontmatter 한 줄로 들어간다. 값은 갈래의 **id**(파일명)다.
+
+```yaml
+branches: [db-connection]
+```
+
+**폴더는 보지 않는다.** `content/wiki/java-spring/jpa/` 에 있어도 `branches` 를
+적지 않으면 어느 갈래에도 속하지 않는다. 어느 개념에 속하는지는 어디에 파일을
+뒀는지와 다른 판단이라, 자동으로 옮기지 않는다.
+
+### 한 문서가 여러 갈래에
+
+지원한다. 배열에 여러 id 를 적으면 된다.
+
+```yaml
+branches: [jpa, db-connection]
+```
+
+이때 일어나는 일:
+
+- 문서 머리의 계보 상자에 **계보가 여러 줄** 쌓인다 (`BranchTrail`).
+- 그 문서가 **갈래 지도마다 각각** 잎으로 나타난다. 같은 문서가 두 지도에 있는 게 맞다.
+- 갈래별 문서 수(`countDocs`)에 **양쪽 모두 잡힌다.** 사이트 전체 합계가 실제 문서
+  수보다 커질 수 있는데, 소속이 여럿이라는 뜻이지 버그가 아니다.
+
+### 갈래 페이지 (`/branch/<id>/`)
+
+머리말에 자기 계보, 본문, 그다음 **갈래 지도**를 그린다. 지도는 자기 아래 서브트리를
+통째로 편다 — 손자·증손자 갈래와 거기 엮인 문서까지 한 장에 들어온다.
+
+- 담긴 게 하나라도 있으면 언제나 지도를 그린다.
+- 하위 갈래가 **없을 때만** 지도 아래에 설명문 달린 문서 목록을 덧붙인다.
+  갈래가 갈라지는 순간부터는 같은 문서를 두 번 늘어놓는 셈이라 지도만 남긴다.
+- 아무것도 안 담긴 갈래는 빈 채로 두지 않고 안내 문구를 낸다. 자리를 먼저
+  잡아 두는 순서를 허용하기 때문이다.
+
+### 실수해도 문서가 사라지지 않게
+
+- `parent` 에 없는 id 를 적으면 그 갈래는 **최상위로 올라간다.** 숨기지 않는다.
+- `parent` 가 서로를 가리켜도 계보 계산은 멈춘다 (`ancestryOf` 의 순환 가드).
+- 문서의 `branches` 에 없는 id 가 있으면 **그 값만 조용히 무시**한다.
+- `branches` 컬렉션이 아예 없는 프로젝트에서도 빌드는 통과한다 (`safeCollection`).
+
+### 아직 안 된 것
+
+당장 고칠 필요는 없지만 알고 있어야 할 것들.
+
+- **`/branch/` 인덱스가 없다.** 전체 갈래를 한 화면에 보는 자리가 없다.
+  가장 가까운 건 `/wiki` 의 최상위 갈래 카드들이다.
+- **포스트에는 계보가 안 붙는다.** `branches` 가 `blogPostSchema` 에 있고
+  색인도 포스트를 읽지만, `BranchTrail` 은 `layouts/WikiPage.astro` 에만 달려 있다.
+  포스트에도 붙이려면 `layouts/BlogPost.astro` 에 같은 줄을 넣으면 된다.
+- **갈래 URL 은 평평하다.** `db-connection` 이 `spring-runtime` 아래여도
+  `/branch/db-connection/` 이다. URL 이 계층을 담지 않는다.
+- **지도에 검색·강조가 없다.** 갈래가 수십 개로 늘면 원하는 노드를 눈으로 찾아야 한다.
 
 ## 위키링크
 
@@ -250,6 +351,36 @@ npm run dev
 `content/` 아래에 미리보기용 더미 문서가 들어 있다. 실제 글이 아니라
 위키링크·백링크 렌더링을 눈으로 확인하기 위한 픽스처다.
 
+### 갈래 지도를 건드릴 때
+
+`components/BranchMap.astro` 하나에 마크업·스크립트가 다 들어 있다. 외부 라이브러리는
+쓰지 않는다 (d3 없음). 손대기 전에 알아야 할 것들:
+
+- **배치는 브라우저에서 한다.** 서버는 중첩 `<ul>` 만 내보내고 스크립트가 그걸 읽어
+  SVG 를 세운다. 접으면 남은 노드 자리를 다시 계산해야 해서, 미리 그려 둔 SVG 로는
+  접기가 안 되기 때문이다. 그 `<ul>` 이 JS 가 꺼진 환경의 최종 모습이기도 하므로
+  **지우지 말 것.** 같은 자료를 JSON 으로 또 심지 않는 이유이기도 하다.
+- **스타일은 `styles/global.css` 에 있다.** Astro 의 스코프 스타일은 컴파일 때 마크업에
+  `data-astro-cid-*` 를 박는 방식이라 **스크립트가 나중에 만든 요소에는 안 붙는다.**
+  지도의 노드는 전부 JS 가 만들므로 컴포넌트 `<style>` 에 두면 조용히 빠진다.
+  `.mermaid-diagram` 이 거기 사는 것과 같은 이유다.
+- **색은 반드시 CSS 변수로.** SVG 속성에 색을 굽지 않으면 테마를 바꿔도 다시 그릴
+  필요가 없다. mermaid 는 색을 인라인해서 테마마다 재렌더하는데, 지도는 그게 필요 없다.
+- **자리 폭이 0 으로 잡히는 순간이 있다.** 스크립트가 레이아웃보다 먼저 돌 때다.
+  그 폭으로 배율을 내면 최소값에 눌려 굳으므로 1 로 두고 `ResizeObserver` 가 고친다.
+- **`requestAnimationFrame` 은 숨은 탭에서 멈춘다.** 접기 애니메이션이 안 끝난 것처럼
+  보여도 탭이 보이면 이어서 끝난다. 헤드리스로 검증할 때 헷갈리는 지점이다.
+- **맞춤 배율에 바닥(`MIN_FIT`)이 있다.** 좁은 화면에서 전부 우겨넣으면 글자가
+  6px 까지 줄어 못 읽는다. 다 보이는 것보다 읽히는 게 먼저고, 나머지는 끌어서 본다.
+
+### `.prose` 안에 무언가를 넣을 때
+
+`global.css` 의 `p` / `li` 는 본문 타이포그래피를 **절대값으로** 박아 둔다
+(`font-size: 17px`, 자간, 색). `.prose` 안에 UI 조각을 넣으면 그게 그대로 새어 든다.
+계보 상자(`BranchTrail`)가 한동안 본문과 같은 크기로 나와 설명문처럼 보였던 게 이것
+때문이었다. 부모에 크기를 줘도 `li` 는 자기 규칙을 쓰므로, **조각 안의 `li`·`a` 에서
+직접 되돌려야 한다.** mermaid 라벨도 같은 이유로 `global.css` 에 되돌리는 규칙이 있다.
+
 ## 구조
 
 ```text
@@ -258,14 +389,20 @@ src/
 ├── content.config.ts              # 테마 자체 미리보기용 컬렉션 정의
 └── theme/
     ├── pages/                     # 모든 라우트. injectRoute 로만 들어간다
+    │   └── branch/[...slug].astro # 갈래 페이지
     ├── layouts/                   # BlogPost, WikiPage
     ├── components/
+    │   ├── BranchMap.astro        # 갈래 지도 (마크업 + 클라이언트 배치 스크립트)
+    │   ├── BranchMapTree.astro    # 지도의 원본이 되는 중첩 <ul> (재귀)
+    │   └── BranchTrail.astro      # 문서 머리의 계보 상자
     ├── lib/
     │   ├── wikilink.ts            # 위키링크 파싱·해석 (순수 로직)
     │   ├── fs-docs.ts             # remark 단계용 fs 기반 색인
-    │   └── collection-docs.ts     # 페이지 단계용 astro:content 기반 색인 + 백링크
+    │   ├── collection-docs.ts     # 페이지 단계용 astro:content 기반 색인 + 백링크
+    │   ├── branches.ts            # 갈래 트리 + 문서→계보 색인
+    │   └── drafts.ts              # 초안을 화면에 낼지 한 곳에서 정한다
     ├── plugins/
     │   └── remark-wikilink.ts
-    ├── schemas/                   # post.ts, wiki.ts
+    ├── schemas/                   # post.ts, wiki.ts, branch.ts
     └── styles/global.css
 ```
