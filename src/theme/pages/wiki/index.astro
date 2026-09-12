@@ -21,6 +21,7 @@ import { getGitCreated } from '../../lib/git-dates.js'
 import { pageHeading } from '../../lib/nav.js'
 import { getBranchIndex, countDocs } from '../../lib/branches.js'
 import { isVisible } from '../../lib/drafts.js'
+import { postsPerPage } from '../../lib/posts.js'
 
 const wikiBase = (config.wiki?.basePath ?? '/wiki').replace(/\/+$/, '')
 // 내비에 적어 둔 문구가 있으면 그것을 쓰고, 없으면 wiki 설정을 쓴다.
@@ -63,6 +64,10 @@ const pages: DocListItem[] = entries
 const allTags = [...new Set(pages.flatMap((p) => p.tags ?? []))].sort((a, b) =>
   a.localeCompare(b, locale),
 )
+
+// 한 쪽에 몇 개를 둘지는 블로그와 같은 손잡이를 쓴다. 목록이 길어지는 이유가
+// 같으니 끊는 길이도 따로 둘 이유가 없다.
+const perPage = postsPerPage()
 
 // 갈래는 최상위만 카드로 세운다. 대문은 입구지 목차가 아니다.
 // 다만 바로 아래 자식 이름은 카드 안에 깔아 준다. 최상위만 보이면
@@ -166,6 +171,36 @@ const rootBranches = branchIndex.roots.map((root) => ({
         border-color: transparent;
         background: var(--color-badge-bg);
       }
+         리셋 버튼이 있을 이유가 없어 그때는 숨는다. */
+      .filter-status {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        margin: 0 0 1rem;
+        font-size: 0.82rem;
+        color: var(--color-text-secondary);
+        font-variant-numeric: tabular-nums;
+      }
+      .filter-tag {
+        color: var(--color-accent);
+        font-weight: 600;
+      }
+      .filter-reset {
+        font: inherit;
+        font-size: 0.82rem;
+        color: var(--color-text-secondary);
+        background: none;
+        border: 0;
+        padding: 0;
+        margin-left: auto;
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+        cursor: pointer;
+        transition: color var(--transition-speed) var(--transition-timing);
+      }
+      .filter-reset:hover {
+        color: var(--color-accent);
+      }
     </style>
   </head>
   <body>
@@ -176,6 +211,7 @@ const rootBranches = branchIndex.roots.map((root) => ({
           <p class="stats">
             문서 {pages.length}개
             {rootBranches.length > 0 && ` · 갈래 ${rootBranches.length}개`}
+            {allTags.length > 0 && ` · 태그 ${allTags.length}개`}
           </p>
         )}
       </PageHeader>
@@ -206,7 +242,7 @@ const rootBranches = branchIndex.roots.map((root) => ({
             </section>
           )}
 
-          <section class="page-section">
+          <section class="page-section" id="all-docs">
             <h2 class="section-title">전체 문서</h2>
             {allTags.length > 0 && (
               <div class="tag-filter" id="tag-filter">
@@ -216,8 +252,20 @@ const rootBranches = branchIndex.roots.map((root) => ({
                 ))}
               </div>
             )}
+            <p class="filter-status" id="filter-status" hidden>
+              <span class="filter-tag"></span>
+              <span class="filter-count"></span>
+              <button type="button" class="filter-reset">전체 보기</button>
+            </p>
             <DocList items={pages} showDescription />
             <p class="no-match" hidden>고른 태그에 해당하는 문서가 없습니다.</p>
+            <nav
+              class="pagination"
+              id="doc-pagination"
+              data-per-page={perPage}
+              aria-label="문서 목록 쪽 이동"
+              hidden
+            ></nav>
           </section>
         </>
       )}
@@ -225,31 +273,124 @@ const rootBranches = branchIndex.roots.map((root) => ({
     <Footer />
 
     <script>
-      // 태그 필터. ?tag=... 로 들어와도 같은 상태가 되도록 URL 과 맞춘다.
+      // 태그 필터와 쪽 나눔. ?tag=&page= 로 들어와도 같은 상태가 되도록 URL 과 맞춘다.
       function setupWikiFilter() {
         const filter = document.getElementById('tag-filter')
         const list = document.querySelector<HTMLElement>('.doc-list')
         const noMatch = document.querySelector<HTMLElement>('.no-match')
+        const status = document.getElementById('filter-status')
+        const nav = document.getElementById('doc-pagination')
+        const section = document.getElementById('all-docs')
         if (!list) return
 
         const items = Array.from(list.querySelectorAll<HTMLElement>(':scope > li'))
+        const perPage = Math.max(1, Number(nav?.dataset.perPage) || 10)
 
-        function apply(tag: string) {
-          const shown: HTMLElement[] = []
-          for (const item of items) {
-            const tags = (item.dataset.tags || '').split('|').filter(Boolean)
-            const show = !tag || tags.includes(tag)
-            item.hidden = !show
-            item.classList.remove('is-last-visible')
-            if (show) shown.push(item)
+        let tag = ''
+        let page = 1
+
+        /** 현재 쪽 주변만 보여주고 나머지는 줄임표로 접는다.
+            Pagination.astro 의 pageNumbers 를 그대로 옮겨 적었다. 그쪽은 서버
+            컴포넌트라 여기서 import 할 수 없고, 이것 하나 때문에 공유 모듈을
+            새로 만들 만큼은 아니다. 한쪽을 고치면 다른 쪽도 같이 고쳐야 한다. */
+        function pageNumbers(current: number, total: number): (number | '…')[] {
+          if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+
+          const pages = new Set<number>([1, total, current])
+          if (current - 1 > 1) pages.add(current - 1)
+          if (current + 1 < total) pages.add(current + 1)
+
+          const sorted = [...pages].sort((a, b) => a - b)
+          const out: (number | '…')[] = []
+          let previous = 0
+          for (const value of sorted) {
+            if (previous && value - previous > 1) out.push('…')
+            out.push(value)
+            previous = value
           }
+          return out
+        }
+
+        function renderPagination(current: number, total: number) {
+          if (!nav) return
+          nav.hidden = total <= 1
+          if (total <= 1) {
+            nav.replaceChildren()
+            return
+          }
+
+          const step = (label: string, target: number, rel: string) => {
+            const button = document.createElement('button')
+            button.type = 'button'
+            button.className = 'step'
+            button.textContent = label
+            const usable = target >= 1 && target <= total
+            if (usable) {
+              button.dataset.page = String(target)
+              button.setAttribute('rel', rel)
+            } else {
+              button.classList.add('disabled')
+              button.disabled = true
+              button.setAttribute('aria-hidden', 'true')
+            }
+            return button
+          }
+
+          const pages = document.createElement('ol')
+          pages.className = 'pages'
+          for (const value of pageNumbers(current, total)) {
+            const li = document.createElement('li')
+            if (value === '…') {
+              li.className = 'gap'
+              li.setAttribute('aria-hidden', 'true')
+              li.textContent = '…'
+            } else if (value === current) {
+              const span = document.createElement('span')
+              span.className = 'page current'
+              span.setAttribute('aria-current', 'page')
+              span.textContent = String(value)
+              li.append(span)
+            } else {
+              const button = document.createElement('button')
+              button.type = 'button'
+              button.className = 'page'
+              button.dataset.page = String(value)
+              button.textContent = String(value)
+              li.append(button)
+            }
+            pages.append(li)
+          }
+
+          nav.replaceChildren(
+            step('← 이전', current - 1, 'prev'),
+            pages,
+            step('다음 →', current + 1, 'next'),
+          )
+        }
+
+        function apply() {
+          const matched = items.filter((item) => {
+            const tags = (item.dataset.tags || '').split('|').filter(Boolean)
+            return !tag || tags.includes(tag)
+          })
+
+          const total = Math.max(1, Math.ceil(matched.length / perPage))
+          page = Math.min(Math.max(1, page), total)
+          const shown = matched.slice((page - 1) * perPage, page * perPage)
+
+          for (const item of items) {
+            item.hidden = true
+            item.classList.remove('is-last-visible')
+          }
+          for (const item of shown) item.hidden = false
           // 구분선은 줄 사이에만 둔다. 뒤쪽이 숨겨지면 마지막으로 보이는 줄에서 선을 뗀다.
           shown[shown.length - 1]?.classList.add('is-last-visible')
 
-          list.hidden = shown.length === 0
-          if (noMatch) noMatch.hidden = shown.length > 0
+          list.hidden = matched.length === 0
+          if (noMatch) noMatch.hidden = matched.length > 0
 
           if (filter) {
+            // 하나를 고르면 나머지는 물러선다. 흐리게 하는 일은 CSS 가 맡는다.
             for (const button of Array.from(filter.querySelectorAll('button'))) {
               button.setAttribute(
                 'aria-pressed',
@@ -257,20 +398,53 @@ const rootBranches = branchIndex.roots.map((root) => ({
               )
             }
           }
+
+          if (status) {
+            status.hidden = !tag
+            const name = status.querySelector<HTMLElement>('.filter-tag')
+            const count = status.querySelector<HTMLElement>('.filter-count')
+            if (name) name.textContent = tag ? `#${tag}` : ''
+            if (count) count.textContent = tag ? `문서 ${matched.length}개` : ''
+          }
+
+          renderPagination(page, total)
+
+          const url = new URL(window.location.href)
+          if (tag) url.searchParams.set('tag', tag)
+          else url.searchParams.delete('tag')
+          if (page > 1) url.searchParams.set('page', String(page))
+          else url.searchParams.delete('page')
+          window.history.replaceState({}, '', url)
         }
 
         filter?.addEventListener('click', (event) => {
           const button = (event.target as HTMLElement).closest('button')
           if (!button) return
-          const tag = button.getAttribute('data-tag') || ''
-          const url = new URL(window.location.href)
-          if (tag) url.searchParams.set('tag', tag)
-          else url.searchParams.delete('tag')
-          window.history.replaceState({}, '', url)
-          apply(tag)
+          const next = button.getAttribute('data-tag') || ''
+          tag = button.getAttribute('data-tag') || ''
+          page = 1
+          apply()
         })
 
-        apply(new URL(window.location.href).searchParams.get('tag') || '')
+        status?.querySelector('.filter-reset')?.addEventListener('click', () => {
+          tag = ''
+          page = 1
+          apply()
+        })
+
+        nav?.addEventListener('click', (event) => {
+          const button = (event.target as HTMLElement).closest<HTMLElement>('[data-page]')
+          if (!button) return
+          page = Number(button.dataset.page)
+          apply()
+          // 아래쪽 번호를 눌렀는데 화면이 그대로면 무엇이 바뀌었는지 알 수 없다.
+          section?.scrollIntoView({ block: 'start' })
+        })
+
+        const params = new URL(window.location.href).searchParams
+        tag = params.get('tag') || ''
+        page = Number(params.get('page')) || 1
+        apply()
       }
 
       document.addEventListener('astro:page-load', setupWikiFilter)
