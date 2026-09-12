@@ -6,6 +6,7 @@ import Header from '../components/Header.astro'
 import BaseHead from '../components/BaseHead.astro'
 import DocList, { type DocListItem } from '../components/DocList.astro'
 import { getGitCreated } from '../lib/git-dates.js'
+import { isVisible } from '../lib/drafts.js'
 
 const wikiBase = (config.wiki?.basePath ?? '/wiki').replace(/\/+$/, '')
 const wikiEnabled = config.wiki?.enabled !== false
@@ -19,7 +20,7 @@ async function safeCollection(name: string): Promise<any[]> {
 }
 
 const recentPosts: DocListItem[] = (await safeCollection('posts'))
-  .filter((p) => !p.data.draft)
+  .filter((p) => isVisible(p.data))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .slice(0, 5)
   .map((post) => ({
@@ -32,7 +33,7 @@ const recentPosts: DocListItem[] = (await safeCollection('posts'))
 
 const recentWiki: DocListItem[] = wikiEnabled
   ? (await safeCollection('wiki'))
-      .filter((p) => !p.data.draft)
+      .filter((p) => isVisible(p.data))
       .map((entry) => {
         const docPath = entry.id.replace(/^\/+|\/+$/g, '').replace(/\/index$/, '')
         const updated = entry.data.updated ?? entry.data.created

@@ -20,6 +20,7 @@ import DocList, { type DocListItem } from '../../components/DocList.astro'
 import { getGitCreated } from '../../lib/git-dates.js'
 import { pageHeading } from '../../lib/nav.js'
 import { getBranchIndex, countDocs } from '../../lib/branches.js'
+import { isVisible } from '../../lib/drafts.js'
 
 const wikiBase = (config.wiki?.basePath ?? '/wiki').replace(/\/+$/, '')
 // 내비에 적어 둔 문구가 있으면 그것을 쓰고, 없으면 wiki 설정을 쓴다.
@@ -42,7 +43,7 @@ const locale = config.site.language || 'ko'
 // 폴더는 파일을 어디 뒀는지일 뿐 개념의 묶음이 아니라, 목록을 폴더로 나누지 않는다.
 // 개념의 소속은 갈래가, 가로지르는 꼬리표는 태그가 맡는다.
 const pages: DocListItem[] = entries
-  .filter((entry) => !entry.data.draft)
+  .filter((entry) => isVisible(entry.data))
   .map((entry) => {
     const docPath = entry.id.replace(/^\/+|\/+$/g, '').replace(/\/index$/, '')
     const slug = (entry.data.slug ?? docPath).replace(/^\/|\/$/g, '')

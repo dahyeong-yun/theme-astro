@@ -6,6 +6,7 @@ import { getCollection } from 'astro:content'
 import config from 'virtual:blog-config'
 import type { DocListItem } from '../components/DocList.astro'
 import { getGitCreated } from './git-dates.js'
+import { isVisible } from './drafts.js'
 
 export const DEFAULT_POSTS_PER_PAGE = 10
 
@@ -20,7 +21,7 @@ export function postUrl(entry: any): string {
   return `/blog/${slug}/`
 }
 
-/** 발행일 내림차순, 초안 제외 */
+/** 발행일 내림차순, 초안 제외(개발 서버에서는 초안도 포함) */
 export async function getPublishedPosts(): Promise<any[]> {
   let entries: any[] = []
   try {
@@ -29,7 +30,7 @@ export async function getPublishedPosts(): Promise<any[]> {
     return []
   }
   return entries
-    .filter((entry) => !entry.data.draft)
+    .filter((entry) => isVisible(entry.data))
     .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
 }
 

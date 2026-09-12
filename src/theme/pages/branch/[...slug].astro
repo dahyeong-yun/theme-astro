@@ -12,6 +12,7 @@
  * 그때는 지도 아래에 설명문 달린 목록을 덧붙인다. 지도는 자리를, 목록은 내용을 말한다.
  */
 import { getCollection, render } from 'astro:content'
+import { isVisible } from '../../lib/drafts.js'
 import config from 'virtual:blog-config'
 import BaseHead from '../../components/BaseHead.astro'
 import Footer from '../../components/Footer.astro'
@@ -31,7 +32,7 @@ export async function getStaticPaths() {
   }
 
   return entries
-    .filter((entry) => !entry.data.draft)
+    .filter((entry) => isVisible(entry.data))
     .map((entry) => {
       const id = entry.id.replace(/^\/+|\/+$/g, '').replace(/\/index$/, '')
       const slug = (entry.data.slug ?? id).replace(/^\/|\/$/g, '')

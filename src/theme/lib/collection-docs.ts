@@ -13,6 +13,7 @@ import {
   type DocMeta,
   type Resolver,
 } from './wikilink.js'
+import { isVisible } from './drafts.js'
 
 /** 링크 목록에 보여줄 만큼의 문서 정보 */
 export interface DocRef extends DocMeta {
@@ -97,7 +98,7 @@ async function buildIndex(): Promise<DocIndex> {
 
   for (const source of sources) {
     for (const entry of source.entries) {
-      if (entry.data?.draft) continue
+      if (!isVisible(entry.data)) continue
       const docPath = toDocPath(entry.id)
       const ref: DocRef = {
         kind: source.kind,

@@ -14,6 +14,7 @@
 import { findAndReplace } from 'mdast-util-find-and-replace'
 import type { CollectionSource } from '../lib/fs-docs.js'
 import { getFsDocs } from '../lib/fs-docs.js'
+import { showDrafts } from '../lib/drafts.js'
 import { headingToAnchor, parseWikilink } from '../lib/wikilink.js'
 
 export interface RemarkWikilinkOptions {
@@ -49,7 +50,7 @@ export function remarkWikilink(options: RemarkWikilinkOptions) {
 
             // 초안은 페이지가 만들어지지 않으므로 링크를 걸면 404 가 된다.
             // 없는 문서와 이유가 다르니 안내 문구를 따로 준다.
-            if (doc?.draft) {
+            if (doc?.draft && !showDrafts) {
               warnOnce(file, link.target, `[[${inner}]] 는 초안 문서입니다. 링크가 걸리지 않습니다.`)
               return brokenNode(label, inner, `아직 초안인 문서입니다: ${inner}`)
             }

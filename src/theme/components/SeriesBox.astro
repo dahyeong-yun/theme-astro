@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import { isVisible } from '../lib/drafts.js';
 
 interface Props {
   currentSeries: string;
@@ -11,7 +12,7 @@ const { currentSeries, currentPostId } = Astro.props;
 // 동일한 시리즈의 포스트 중, draft가 아니며, 동일한 series명을 가진 포스트를 가져옵니다.
 const allPosts = await getCollection('posts');
 const seriesPosts = allPosts
-  .filter((p) => !p.data.draft && p.data.series === currentSeries)
+  .filter((p) => isVisible(p.data) && p.data.series === currentSeries)
   .sort((a, b) => (a.data.seriesOrder ?? 999) - (b.data.seriesOrder ?? 999));
 
 if (seriesPosts.length === 0) return null;

@@ -6,10 +6,11 @@ import Footer from '../../components/Footer.astro';
 import BaseHead from '../../components/BaseHead.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import { getGitCreated } from '../../lib/git-dates.js';
+import { isVisible } from '../../lib/drafts.js';
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts');
-  const seriesPosts = posts.filter((p) => !p.data.draft && p.data.series);
+  const seriesPosts = posts.filter((p) => isVisible(p.data) && p.data.series);
 
   // 시리즈별 그룹화
   const seriesMap = new Map<string, typeof posts>();

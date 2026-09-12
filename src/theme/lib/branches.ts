@@ -10,6 +10,7 @@
 import { getCollection } from 'astro:content'
 import config from 'virtual:blog-config'
 import { POSTS_BASE, WIKI_BASE, type DocRef } from './collection-docs.js'
+import { isVisible } from './drafts.js'
 
 export const BRANCH_BASE = '/branch'
 
@@ -59,7 +60,7 @@ async function safeCollection(name: string): Promise<any[]> {
 
 async function buildIndex(): Promise<BranchIndex> {
   const locale = config.site.language || 'ko'
-  const entries = (await safeCollection('branches')).filter((entry) => !entry.data?.draft)
+  const entries = (await safeCollection('branches')).filter((entry) => isVisible(entry.data))
 
   const byId = new Map<string, BranchNode>()
   const orderOf = new Map<string, number>()
@@ -109,7 +110,7 @@ async function buildIndex(): Promise<BranchIndex> {
 
   for (const source of sources) {
     for (const entry of source.entries) {
-      if (entry.data?.draft) continue
+      if (!isVisible(entry.data)) continue
       const ids: string[] = Array.isArray(entry.data?.branches) ? entry.data.branches : []
       if (ids.length === 0) continue
 

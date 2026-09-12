@@ -8,9 +8,10 @@ import FormattedDate from '../../components/FormattedDate.astro';
 import { getGitCreated } from '../../lib/git-dates.js';
 import PageHeader from '../../components/PageHeader.astro';
 import { pageHeading } from '../../lib/nav.js';
+import { isVisible } from '../../lib/drafts.js';
 
 const posts = await getCollection('posts');
-const seriesPosts = posts.filter((p) => !p.data.draft && p.data.series);
+const seriesPosts = posts.filter((p) => isVisible(p.data) && p.data.series);
 
 // 시리즈별 그룹화
 // lastUpdated 를 정한 글의 파일 경로도 같이 들고 다닌다.

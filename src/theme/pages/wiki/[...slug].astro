@@ -3,6 +3,7 @@ import { getCollection, render } from 'astro:content'
 import WikiPage from '../../layouts/WikiPage.astro'
 import { getGitCreated } from '../../lib/git-dates.js'
 import { excerpt } from '../../lib/excerpt.js'
+import { isVisible } from '../../lib/drafts.js'
 
 export async function getStaticPaths() {
   let pages: any[] = []
@@ -14,7 +15,7 @@ export async function getStaticPaths() {
   }
 
   return pages
-    .filter((page) => !page.data.draft)
+    .filter((page) => isVisible(page.data))
     .map((page) => {
       const slug = page.data.slug
         ? page.data.slug.replace(/^\/|\/$/g, '')
