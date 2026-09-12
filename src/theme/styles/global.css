@@ -481,8 +481,11 @@ figure.mermaid-diagram {
 }
 
 /* 확대 컨트롤. 본문 폭에 다 들어가는 그림에는 나오지 않는다.
-   그림 위에 겹치면 내용을 가리므로 아래에 붙인다. */
-.mermaid-diagram__zoom {
+   그림 위에 겹치면 내용을 가리므로 아래에 붙인다.
+   갈래 지도(.branch-map__zoom)도 같은 컨트롤을 쓴다. 같은 일을 하는 버튼이
+   페이지마다 다르게 생기면 안 되므로 모양은 여기 한 곳에서만 정한다. */
+.mermaid-diagram__zoom,
+.branch-map__zoom {
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -490,7 +493,8 @@ figure.mermaid-diagram {
   margin-top: 0.5rem;
 }
 
-.mermaid-diagram__zoom button {
+.mermaid-diagram__zoom button,
+.branch-map__zoom button {
   min-width: 1.75rem;
   height: 1.75rem;
   padding: 0 0.4rem;
@@ -508,13 +512,15 @@ figure.mermaid-diagram {
   transition: color 0.15s, border-color 0.15s, background-color 0.15s;
 }
 
-.mermaid-diagram__zoom button:hover {
+.mermaid-diagram__zoom button:hover,
+.branch-map__zoom button:hover {
   color: var(--color-text-primary);
   border-color: var(--color-accent);
 }
 
 /* 배율 표시가 곧 '맞춤으로 되돌리기' 버튼이다. */
-.mermaid-diagram__zoom .is-label {
+.mermaid-diagram__zoom .is-label,
+.branch-map__zoom .is-label {
   min-width: 3.25rem;
   font-variant-numeric: tabular-nums;
 }
@@ -557,6 +563,160 @@ body > div[id^="dpm-mermaid-"] {
   opacity: 0;
   pointer-events: none;
   z-index: -1;
+}
+
+/* ============================================================
+   갈래 지도 — 중첩 <ul> 이 가로 마인드맵으로 바뀐다
+   (BranchMap.astro 가 목록을 읽어 SVG 를 세운다)
+
+   스타일이 여기 있는 이유: Astro 의 스코프 스타일은 컴파일 때 마크업에
+   data-astro-cid-* 를 박는 방식이라, 스크립트가 나중에 만든 요소에는 안 붙는다.
+   지도의 노드는 전부 JS 가 만들므로 컴포넌트 <style> 에 두면 조용히 빠진다.
+   mermaid 규칙이 여기 사는 것과 같은 이유다.
+   ============================================================ */
+
+figure.branch-map {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+.branch-map__body {
+  width: 100%;
+  /* 지도는 자기 안에서 확대·이동한다. 넘치는 부분은 잘라 두고 본문을 밀지 않는다. */
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.branch-map__svg {
+  display: block;
+  touch-action: pan-y; /* 세로 스크롤은 페이지에 넘기고 가로 끌기만 받는다 */
+  cursor: grab;
+}
+.branch-map__svg.is-dragging {
+  cursor: grabbing;
+}
+
+/* 스크립트가 돌기 전, 그리고 JS 가 꺼진 환경의 최종 모습.
+   그때는 그냥 중첩 목록이다. 링크가 살아 있으므로 길이 끊기지는 않는다. */
+.branch-map__body > ul {
+  margin: 0;
+  padding: 1rem 1rem 1rem 1.25rem;
+  list-style: none;
+}
+.branch-map__body ul {
+  margin: 0;
+  padding-left: 1rem;
+  list-style: none;
+}
+.branch-map__body li {
+  margin: 0;
+  padding: 0.15rem 0;
+  border-left: 1px solid var(--color-border-hairline);
+  padding-left: 0.75rem;
+  font-size: 0.9rem;
+}
+.branch-map__body li > a {
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+.branch-map__body li > a:hover {
+  color: var(--color-accent);
+}
+.branch-map__body li[data-kind='doc'] > a {
+  color: var(--color-text-secondary);
+}
+
+/* ── 노드 ── */
+.branch-map__node {
+  /* 색은 전부 CSS 변수다. 그래서 테마를 바꿔도 다시 그릴 필요가 없다. */
+  transition: opacity 0.15s var(--transition-timing);
+}
+
+.branch-map__box {
+  fill: var(--color-surface-secondary);
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+.branch-map__node.is-root .branch-map__box {
+  fill: var(--color-badge-bg);
+  stroke: var(--color-accent);
+}
+.branch-map__node.is-doc .branch-map__box {
+  fill: transparent;
+  stroke: var(--color-border-hairline);
+}
+.branch-map__node a:hover .branch-map__box {
+  stroke: var(--color-accent);
+  fill: var(--color-surface-secondary);
+}
+.branch-map__node a:focus-visible .branch-map__box {
+  stroke: var(--color-accent);
+  stroke-width: 2;
+}
+.branch-map__node a {
+  cursor: pointer;
+  outline: none;
+}
+
+.branch-map__label {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  fill: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+.branch-map__node.is-root .branch-map__label {
+  font-weight: 700;
+  fill: var(--color-accent);
+}
+.branch-map__node.is-branch .branch-map__label {
+  font-weight: 600;
+}
+.branch-map__node.is-doc .branch-map__label {
+  fill: var(--color-text-secondary);
+}
+.branch-map__node a:hover .branch-map__label {
+  fill: var(--color-accent);
+}
+
+/* ── 문서 수 배지 = 접기 손잡이 ── */
+.branch-map__badge {
+  cursor: pointer;
+  outline: none;
+}
+.branch-map__badge rect {
+  fill: transparent;
+}
+.branch-map__badge text {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  fill: var(--color-text-secondary);
+}
+.branch-map__badge:hover rect,
+.branch-map__badge:focus-visible rect {
+  fill: var(--color-badge-bg);
+}
+.branch-map__badge:hover text,
+.branch-map__badge:focus-visible text {
+  fill: var(--color-accent);
+}
+/* 접힌 노드는 배지를 채워 둔다. 숫자만으로는 접힌 건지 원래 그런 건지 알 수 없다. */
+.branch-map__node.is-collapsed .branch-map__badge rect {
+  fill: var(--color-badge-bg);
+  stroke: var(--color-accent);
+  stroke-width: 1;
+}
+.branch-map__node.is-collapsed .branch-map__badge text {
+  fill: var(--color-accent);
+}
+
+.branch-map__edge {
+  fill: none;
+  stroke: var(--color-border-hairline);
+  stroke-width: 1.5;
 }
 
 /* ============================================================

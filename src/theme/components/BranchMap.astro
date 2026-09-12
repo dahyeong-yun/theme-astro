@@ -1,0 +1,697 @@
+---
+/**
+ * 갈래 지도.
+ *
+ * 갈래는 중첩되는데 갈래 페이지는 바로 아래 한 겹만 보여줬다. 그래서 "이 갈래
+ * 아래에 무엇이 있는가"를 알려면 카드를 하나씩 눌러 들어갔다 나와야 했다.
+ * 여기서는 서브트리를 통째로, 문서까지 한 장에 편다.
+ *
+ * 서버는 중첩 <ul> 만 내보내고(BranchMapTree), 스크립트가 그것을 읽어 SVG 로
+ * 갈아끼운다. 접으면 자리를 다시 계산해야 하므로 배치는 브라우저에서 한다.
+ * 미리 그려 둔 SVG 로는 접기가 안 된다.
+ *
+ * 색은 SVG 속성이 아니라 CSS 변수로 둔다. 그래서 테마를 바꿔도 다시 그릴 일이
+ * 없다. mermaid 는 색을 인라인해 매번 재렌더해야 하는 것과 다른 점이다.
+ */
+import BranchMapTree from './BranchMapTree.astro'
+import { countDocs, type BranchNode } from '../lib/branches.js'
+
+interface Props {
+  node: BranchNode
+}
+
+const { node } = Astro.props
+---
+
+<figure
+  class="branch-map"
+  role="group"
+  aria-label={`${node.title} 갈래 지도`}
+  data-root-title={node.title}
+  data-root-count={countDocs(node)}
+>
+  <div class="branch-map__body">
+    <BranchMapTree nodes={node.children} docs={node.docs} />
+  </div>
+</figure>
+
+<script>
+  /**
+   * 중첩 <ul> → 가로 마인드맵.
+   *
+   * 배치는 리프에 y 를 차례로 주고 부모를 자식들의 가운데에 두는 단순한 방식이다.
+   * 갈래는 몇 겹 되지 않고 한 열의 폭이 제목 길이로 정해지므로 이걸로 충분하다.
+   */
+
+  type Kind = 'root' | 'branch' | 'doc'
+
+  interface MapNode {
+    id: string
+    title: string
+    /** 화면에 쓰는 제목. 너무 길면 줄여 둔 것이라 title 과 다를 수 있다. */
+    label: string
+    url: string | null
+    kind: Kind
+    /** 하위까지 훑은 문서 수. 갈래에만 있다. */
+    count: number
+    children: MapNode[]
+    parent: MapNode | null
+    depth: number
+    collapsed: boolean
+    /** 라벨을 재서 정한 폭 */
+    w: number
+    x: number
+    y: number
+  }
+
+  interface Placed {
+    node: MapNode
+    x: number
+    y: number
+  }
+
+  interface Rendered {
+    node: MapNode
+    g: SVGGElement
+    edge: SVGPathElement | null
+    /** 지금 화면에 있는 값 */
+    cur: { x: number; y: number; o: number }
+    /** 이번 배치가 노리는 값 */
+    tgt: { x: number; y: number; o: number }
+    from: { x: number; y: number; o: number }
+    exiting: boolean
+  }
+
+  const SVG_NS = 'http://www.w3.org/2000/svg'
+
+  const ROW = 34 // 리프 한 줄이 차지하는 높이
+  const NODE_H = 26
+  const COL_GAP = 48 // 열과 열 사이
+  const PAD = 20 // 그림 가장자리 여백
+  const LABEL_PAD = 12 // 노드 안쪽 좌우 여백
+  const BADGE_W = 26 // 문서 수 배지가 먹는 폭
+  const MAX_LABEL = 320 // 이보다 긴 제목은 줄인다. 한 노드가 열을 다 먹지 않도록
+  const DUR = 260 // 접기 애니메이션 길이(ms)
+
+  const MIN_K = 0.3
+  const MAX_K = 2.5
+  const STEP = 1.25
+  /**
+   * '맞추기' 가 내려갈 수 있는 바닥.
+   *
+   * 좁은 화면에서 전체를 넣으려 들면 글자가 6px 까지 줄어 아무것도 못 읽는다.
+   * 다 보이는 것보다 읽히는 게 먼저다. 여기서 멈추고 나머지는 끌어서 보게 둔다.
+   * 직접 누르는 축소(−)는 이 아래로도 내려간다.
+   */
+  const MIN_FIT = 0.55
+
+  const MIN_H = 260
+  const MAX_H = 620
+
+  function setup() {
+    const figures = Array.from(
+      document.querySelectorAll<HTMLElement>('figure.branch-map'),
+    ).filter((figure) => !figure.dataset.ready)
+
+    for (const figure of figures) {
+      figure.dataset.ready = '1'
+      try {
+        build(figure)
+      } catch {
+        // 지도를 못 세우면 원본 목록을 그대로 둔다. 페이지가 비지 않는 게 우선이다.
+        figure.classList.add('is-fallback')
+      }
+    }
+  }
+
+  function build(figure: HTMLElement) {
+    const body = figure.querySelector<HTMLElement>('.branch-map__body')
+    const list = body?.querySelector<HTMLUListElement>(':scope > ul')
+    if (!body || !list) return
+
+    // ── 1. 목록을 모델로 ────────────────────────────────────────────────
+    const root: MapNode = {
+      id: 'r',
+      title: figure.dataset.rootTitle || '',
+      label: figure.dataset.rootTitle || '',
+      url: null, // 지금 보고 있는 페이지라 링크로 걸지 않는다
+      kind: 'root',
+      count: Number(figure.dataset.rootCount || 0),
+      children: [],
+      parent: null,
+      depth: 0,
+      collapsed: false,
+      w: 0,
+      x: 0,
+      y: 0,
+    }
+    root.children = parseList(list, root)
+    if (root.children.length === 0) return
+
+    const all: MapNode[] = []
+    walk(root, (n) => all.push(n))
+
+    // ── 2. 화면 만들기 ─────────────────────────────────────────────────
+    const svg = document.createElementNS(SVG_NS, 'svg')
+    // 지도는 그림이고 안의 링크가 실체다. 목록을 걷어내는 대신 링크를 그대로 옮겼다.
+    svg.setAttribute('class', 'branch-map__svg')
+    const viewport = document.createElementNS(SVG_NS, 'g')
+    const edgeLayer = document.createElementNS(SVG_NS, 'g')
+    edgeLayer.setAttribute('class', 'branch-map__edges')
+    const nodeLayer = document.createElementNS(SVG_NS, 'g')
+    nodeLayer.setAttribute('class', 'branch-map__nodes')
+    viewport.append(edgeLayer, nodeLayer)
+    svg.appendChild(viewport)
+
+    body.replaceChildren(svg)
+
+    const zoom = document.createElement('div')
+    zoom.className = 'branch-map__zoom'
+    const out = button('−', '축소')
+    const label = button('100%', '전체가 보이게 맞추기')
+    label.classList.add('is-label')
+    const into = button('＋', '확대')
+    zoom.append(out, label, into)
+    figure.appendChild(zoom)
+
+    // ── 3. 라벨 폭 재기 ────────────────────────────────────────────────
+    // 한글 제목은 폭이 제각각이라 재지 않으면 열이 겹치거나 크게 비어 버린다.
+    measure(svg, all)
+
+    // ── 4. 상태 ───────────────────────────────────────────────────────
+    const state = new Map<string, Rendered>()
+    const view = { k: 1, tx: 0, ty: 0 }
+    /** 직접 배율을 건드렸는지. 건드린 뒤에는 접어도 마음대로 맞추지 않는다. */
+    let touched = false
+    let content = { w: 0, h: 0 }
+    let raf = 0
+    let start = 0
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    // ── 5. 배치 ───────────────────────────────────────────────────────
+    function layout(): Placed[] {
+      // 열 x 는 그 열에서 가장 넓은 노드가 정한다.
+      const colW: number[] = []
+      walkVisible(root, (n) => {
+        colW[n.depth] = Math.max(colW[n.depth] ?? 0, n.w)
+      })
+      const colX: number[] = []
+      let acc = 0
+      for (let d = 0; d < colW.length; d++) {
+        colX[d] = acc
+        acc += colW[d] + COL_GAP
+      }
+
+      const placed: Placed[] = []
+      let cursor = 0
+
+      // 리프는 순서대로 쌓고, 부모는 자식들의 가운데에 선다.
+      const place = (n: MapNode): number => {
+        const x = colX[n.depth]
+        const kids = n.collapsed ? [] : n.children
+        let y: number
+        if (kids.length === 0) {
+          y = cursor
+          cursor += ROW
+        } else {
+          const ys = kids.map(place)
+          y = (ys[0] + ys[ys.length - 1]) / 2
+        }
+        n.x = x
+        n.y = y
+        placed.push({ node: n, x, y })
+        return y
+      }
+      place(root)
+
+      content = {
+        w: acc - COL_GAP,
+        h: Math.max(cursor - ROW + NODE_H, NODE_H),
+      }
+      return placed
+    }
+
+    // ── 6. 그리기 ─────────────────────────────────────────────────────
+    function sync(animate: boolean) {
+      const placed = layout()
+      const alive = new Set<string>()
+
+      for (const { node, x, y } of placed) {
+        alive.add(node.id)
+        let r = state.get(node.id)
+        if (!r) {
+          r = create(node)
+          state.set(node.id, r)
+          // 새로 나타나는 노드는 부모 자리에서 자라 나오게 둔다.
+          const p = node.parent ? state.get(node.parent.id) : null
+          const at = p ? p.cur : { x, y, o: 0 }
+          r.cur = { x: at.x, y: at.y, o: 0 }
+        }
+        r.exiting = false
+        r.tgt = { x, y, o: 1 }
+      }
+
+      for (const [id, r] of state) {
+        if (alive.has(id)) continue
+        r.exiting = true
+        // 사라질 때는 부모 쪽으로 접혀 들어간다.
+        const p = r.node.parent ? state.get(r.node.parent.id) : null
+        r.tgt = { x: p?.tgt.x ?? r.cur.x, y: p?.tgt.y ?? r.cur.y, o: 0 }
+      }
+
+      for (const r of state.values()) r.from = { ...r.cur }
+
+      if (!touched) fitView()
+
+      if (animate && !reduced) {
+        start = performance.now()
+        cancelAnimationFrame(raf)
+        raf = requestAnimationFrame(tick)
+      } else {
+        for (const r of state.values()) r.cur = { ...r.tgt }
+        paint()
+        cleanup()
+      }
+    }
+
+    function tick(now: number) {
+      const p = Math.min(1, (now - start) / DUR)
+      const e = 1 - Math.pow(1 - p, 3) // ease-out cubic
+      for (const r of state.values()) {
+        r.cur = {
+          x: r.from.x + (r.tgt.x - r.from.x) * e,
+          y: r.from.y + (r.tgt.y - r.from.y) * e,
+          o: r.from.o + (r.tgt.o - r.from.o) * e,
+        }
+      }
+      paint()
+      if (p < 1) raf = requestAnimationFrame(tick)
+      else cleanup()
+    }
+
+    function cleanup() {
+      for (const [id, r] of state) {
+        if (!r.exiting) continue
+        r.g.remove()
+        r.edge?.remove()
+        state.delete(id)
+      }
+    }
+
+    /** 좌표를 화면에 옮긴다. 선은 매 프레임 노드 자리에서 다시 긋는다. */
+    function paint() {
+      for (const r of state.values()) {
+        r.g.setAttribute('transform', `translate(${r.cur.x} ${r.cur.y - NODE_H / 2})`)
+        r.g.style.opacity = String(r.cur.o)
+        if (!r.edge) continue
+        const p = r.node.parent ? state.get(r.node.parent.id) : null
+        if (!p) continue
+        r.edge.setAttribute('d', curve(p.cur.x + p.node.w, p.cur.y, r.cur.x, r.cur.y))
+        r.edge.style.opacity = String(Math.min(r.cur.o, p.cur.o))
+      }
+    }
+
+    function create(node: MapNode): Rendered {
+      const g = document.createElementNS(SVG_NS, 'g')
+      g.setAttribute('class', `branch-map__node is-${node.kind}`)
+
+      // 링크가 있으면 <a> 로 감싼다. 지금 보고 있는 갈래(root)만 링크가 아니다.
+      let hit: SVGElement = g
+      if (node.url) {
+        const a = document.createElementNS(SVG_NS, 'a')
+        a.setAttribute('href', node.url)
+        g.appendChild(a)
+        hit = a
+      }
+
+      const rect = document.createElementNS(SVG_NS, 'rect')
+      rect.setAttribute('class', 'branch-map__box')
+      rect.setAttribute('width', String(node.w))
+      rect.setAttribute('height', String(NODE_H))
+      rect.setAttribute('rx', node.kind === 'doc' ? '13' : '7')
+      hit.appendChild(rect)
+
+      const text = document.createElementNS(SVG_NS, 'text')
+      text.setAttribute('class', 'branch-map__label')
+      text.setAttribute('x', String(LABEL_PAD))
+      text.setAttribute('y', String(NODE_H / 2))
+      text.setAttribute('dominant-baseline', 'central')
+      text.textContent = node.label
+      // 줄인 제목이면 전체를 마우스로 확인할 수 있게 남겨 둔다.
+      if (node.label !== node.title) {
+        const full = document.createElementNS(SVG_NS, 'title')
+        full.textContent = node.title
+        hit.appendChild(full)
+      }
+      hit.appendChild(text)
+
+      // 배지는 문서 수이면서 접기 손잡이다. 라벨은 이동, 배지는 접기 —
+      // 한 노드에 두 동작이 있으니 누르는 자리를 갈라 둔다.
+      let edge: SVGPathElement | null = null
+      if (hasBadge(node)) {
+        const badge = document.createElementNS(SVG_NS, 'g')
+        badge.setAttribute('class', 'branch-map__badge')
+        badge.setAttribute('role', 'button')
+        badge.setAttribute('tabindex', '0')
+        badge.setAttribute(
+          'transform',
+          `translate(${node.w - BADGE_W} 0)`,
+        )
+        const bg = document.createElementNS(SVG_NS, 'rect')
+        bg.setAttribute('width', String(BADGE_W))
+        bg.setAttribute('height', String(NODE_H))
+        bg.setAttribute('rx', '7')
+        const bt = document.createElementNS(SVG_NS, 'text')
+        bt.setAttribute('x', String(BADGE_W / 2))
+        bt.setAttribute('y', String(NODE_H / 2))
+        bt.setAttribute('text-anchor', 'middle')
+        bt.setAttribute('dominant-baseline', 'central')
+        // 하위까지 훑은 문서 수. 갈래 카드가 쓰던 숫자와 같은 뜻이라야 한다.
+        // 0 이면 0 으로 둔다. 자리만 잡아 둔 갈래를 문서가 있는 것처럼 보이게 하지 않는다.
+        bt.textContent = String(node.count)
+        badge.append(bg, bt)
+        g.appendChild(badge)
+
+        const toggle = (event: Event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          node.collapsed = !node.collapsed
+          g.classList.toggle('is-collapsed', node.collapsed)
+          badge.setAttribute('aria-expanded', String(!node.collapsed))
+          sync(true)
+        }
+        badge.addEventListener('click', toggle)
+        badge.addEventListener('keydown', (event) => {
+          const key = (event as KeyboardEvent).key
+          if (key === 'Enter' || key === ' ') toggle(event)
+        })
+        badge.setAttribute('aria-expanded', 'true')
+        badge.setAttribute('aria-label', `${node.title} 접기/펼치기`)
+      }
+
+      if (node.parent) {
+        edge = document.createElementNS(SVG_NS, 'path')
+        edge.setAttribute('class', 'branch-map__edge')
+        edgeLayer.appendChild(edge)
+      }
+
+      nodeLayer.appendChild(g)
+      return {
+        node,
+        g,
+        edge,
+        cur: { x: 0, y: 0, o: 0 },
+        tgt: { x: 0, y: 0, o: 1 },
+        from: { x: 0, y: 0, o: 0 },
+        exiting: false,
+      }
+    }
+
+    // ── 7. 보기(확대/이동) ─────────────────────────────────────────────
+    function size() {
+      const w = body.clientWidth || 1
+      const h = Math.max(MIN_H, Math.min(MAX_H, content.h + PAD * 2))
+      svg.setAttribute('width', String(w))
+      svg.setAttribute('height', String(h))
+      return { w, h }
+    }
+
+    function fitView() {
+      const { w, h } = size()
+
+      // 자리 폭이 0 으로 잡히는 순간이 있다. 스크립트가 레이아웃보다 먼저 돌거나
+      // 숨은 탭에 있을 때다. 그 폭으로 배율을 내면 최소값(30%)에 눌려 굳고,
+      // 폭이 돌아와도 되돌릴 근거가 사라진다. 1 로 두었다가 아래 관찰자가 고친다.
+      if (w <= PAD * 2) {
+        view.k = 1
+        view.tx = PAD
+        view.ty = PAD
+        applyView()
+        return
+      }
+
+      const k = Math.min(
+        1,
+        (w - PAD * 2) / Math.max(content.w, 1),
+        (h - PAD * 2) / Math.max(content.h, 1),
+      )
+      view.k = Math.max(MIN_FIT, k)
+      // 세로는 가운데, 가로는 왼쪽부터. 뿌리가 왼쪽 끝에 서야 계보가 읽힌다.
+      // 배치의 y 는 노드 '중심'이고 맨 윗줄 중심은 0 이라, 반 칸만큼 내려 준다.
+      view.tx = PAD
+      view.ty = (h - content.h * view.k) / 2 + (NODE_H / 2) * view.k
+      applyView()
+    }
+
+    function applyView() {
+      viewport.setAttribute(
+        'transform',
+        `translate(${view.tx} ${view.ty}) scale(${view.k})`,
+      )
+      label.textContent = `${Math.round(view.k * 100)}%`
+    }
+
+    /** 화면의 한 점을 붙든 채 배율만 바꾼다. */
+    function zoomAt(k: number, cx: number, cy: number) {
+      const next = Math.max(MIN_K, Math.min(MAX_K, k))
+      view.tx = cx - ((cx - view.tx) * next) / view.k
+      view.ty = cy - ((cy - view.ty) * next) / view.k
+      view.k = next
+      touched = true
+      applyView()
+    }
+
+    const center = () => {
+      const { w, h } = size()
+      return { x: w / 2, y: h / 2 }
+    }
+
+    out.addEventListener('click', () => {
+      const c = center()
+      zoomAt(view.k / STEP, c.x, c.y)
+    })
+    into.addEventListener('click', () => {
+      const c = center()
+      zoomAt(view.k * STEP, c.x, c.y)
+    })
+    label.addEventListener('click', () => {
+      touched = false
+      fitView()
+    })
+
+    // 맨 휠은 페이지 스크롤로 남긴다. 그림 위에서 페이지가 멈추면 답답하다.
+    // ctrl/⌘ + 휠, 그리고 트랙패드 핀치(ctrlKey 로 온다)만 배율로 받는다.
+    svg.addEventListener(
+      'wheel',
+      (event) => {
+        if (!event.ctrlKey && !event.metaKey) return
+        event.preventDefault()
+        const box = svg.getBoundingClientRect()
+        zoomAt(
+          view.k * Math.pow(0.999, event.deltaY),
+          event.clientX - box.left,
+          event.clientY - box.top,
+        )
+      },
+      { passive: false },
+    )
+
+    // 빈 곳을 끌어 옮긴다. 끌고 나서 손을 떼면 링크가 눌리지 않도록 막는다.
+    let drag: { x: number; y: number; tx: number; ty: number } | null = null
+    let moved = false
+
+    svg.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) return
+      drag = { x: event.clientX, y: event.clientY, tx: view.tx, ty: view.ty }
+      moved = false
+    })
+    svg.addEventListener('pointermove', (event) => {
+      if (!drag) return
+      const dx = event.clientX - drag.x
+      const dy = event.clientY - drag.y
+      if (!moved && Math.hypot(dx, dy) < 4) return
+      if (!moved) {
+        moved = true
+        svg.setPointerCapture(event.pointerId)
+        svg.classList.add('is-dragging')
+      }
+      view.tx = drag.tx + dx
+      view.ty = drag.ty + dy
+      touched = true
+      applyView()
+    })
+    const endDrag = () => {
+      drag = null
+      svg.classList.remove('is-dragging')
+    }
+    svg.addEventListener('pointerup', endDrag)
+    svg.addEventListener('pointercancel', endDrag)
+    svg.addEventListener(
+      'click',
+      (event) => {
+        if (moved) {
+          event.preventDefault()
+          event.stopPropagation()
+          moved = false
+        }
+      },
+      true,
+    )
+
+    // 빈 곳을 두 번 누르면 그 자리를 중심으로 키운다.
+    // 노드 위에서는 받지 않는다. 노드는 링크라 첫 번째 클릭에 이미 넘어가 버린다.
+    svg.addEventListener('dblclick', (event) => {
+      if ((event.target as Element).closest('a, .branch-map__badge')) return
+      event.preventDefault()
+      const box = svg.getBoundingClientRect()
+      zoomAt(view.k * 1.6, event.clientX - box.left, event.clientY - box.top)
+    })
+
+    // 자리 폭이 달라지면 '맞춤' 배율도 달라진다. 직접 맞춘 그림은 그대로 둔다.
+    // 폭이 실제로 달라졌을 때만 손댄다. 배율을 바꾸면 그림 높이가 따라 변하는데
+    // 높이에도 반응하면 관찰이 스스로를 깨워 루프 경고가 난다.
+    // -1 로 시작하는 이유: 처음 관찰값이 0 일 수 있고, 그걸 '변화 없음' 으로
+    // 넘겨 버리면 폭이 돌아왔을 때 고칠 기회를 놓친다.
+    let lastW = -1
+    new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width ?? 0
+      if (w === lastW) return
+      lastW = w
+      if (!touched) fitView()
+      else size()
+    }).observe(body)
+
+    sync(false)
+
+    // 글꼴이 늦게 오면 처음 잰 폭이 틀린다(라벨이 노드 밖으로 삐져나온다).
+    // 폰트가 자리 잡은 뒤 한 번 더 재고 노드 폭을 고쳐 둔다.
+    document.fonts?.ready.then(() => {
+      measure(svg, all)
+      for (const r of state.values()) {
+        const box = r.g.querySelector<SVGRectElement>('.branch-map__box')
+        box?.setAttribute('width', String(r.node.w))
+        const badge = r.g.querySelector<SVGGElement>('.branch-map__badge')
+        badge?.setAttribute('transform', `translate(${r.node.w - BADGE_W} 0)`)
+        const text = r.g.querySelector<SVGTextElement>('.branch-map__label')
+        if (text) text.textContent = r.node.label
+      }
+      sync(false)
+    })
+  }
+
+  // ── 도우미 ───────────────────────────────────────────────────────────
+
+  function parseList(ul: HTMLUListElement, parent: MapNode): MapNode[] {
+    const out: MapNode[] = []
+    let i = 0
+    for (const li of Array.from(ul.children)) {
+      const a = li.querySelector<HTMLAnchorElement>(':scope > a')
+      if (!a) continue
+      const sub = li.querySelector<HTMLUListElement>(':scope > ul')
+      const node: MapNode = {
+        id: `${parent.id}.${i++}`,
+        title: (a.textContent || '').trim(),
+        label: (a.textContent || '').trim(),
+        url: a.getAttribute('href'),
+        kind: (li as HTMLElement).dataset.kind === 'doc' ? 'doc' : 'branch',
+        count: Number((li as HTMLElement).dataset.count || 0),
+        children: [],
+        parent,
+        depth: parent.depth + 1,
+        collapsed: false,
+        w: 0,
+        x: 0,
+        y: 0,
+      }
+      if (sub) node.children = parseList(sub, node)
+      out.push(node)
+    }
+    return out
+  }
+
+  function walk(node: MapNode, fn: (n: MapNode) => void) {
+    fn(node)
+    for (const child of node.children) walk(child, fn)
+  }
+
+  function walkVisible(node: MapNode, fn: (n: MapNode) => void) {
+    fn(node)
+    if (node.collapsed) return
+    for (const child of node.children) walkVisible(child, fn)
+  }
+
+  /**
+   * 라벨 폭을 실제로 재서 노드 폭을 정한다.
+   *
+   * 글꼴은 CSS 가 정하므로 재는 글자도 같은 클래스를 달아 같은 자리에 잠깐 붙인다.
+   * 폭을 못 재면(글꼴이 아직 안 왔거나 자리가 숨어 있으면) 글자 수로 어림잡는다.
+   */
+  function measure(svg: SVGSVGElement, nodes: MapNode[]) {
+    const probe = document.createElementNS(SVG_NS, 'text')
+    probe.setAttribute('class', 'branch-map__label')
+    probe.style.visibility = 'hidden'
+    svg.appendChild(probe)
+
+    const widthOf = (text: string) => {
+      probe.textContent = text
+      let w = 0
+      try {
+        w = probe.getComputedTextLength()
+      } catch {
+        w = 0
+      }
+      return w || text.length * 12
+    }
+
+    for (const node of nodes) {
+      let label = node.title
+      let text = widthOf(label)
+      // 긴 제목은 잘라 준다. 폭만 막고 글자를 그대로 두면 노드 밖으로 넘친다.
+      if (text > MAX_LABEL) {
+        while (label.length > 1 && widthOf(`${label}…`) > MAX_LABEL) {
+          label = label.slice(0, -1)
+        }
+        label = `${label}…`
+        text = widthOf(label)
+      }
+      node.label = label
+      const badge = hasBadge(node) ? BADGE_W : 0
+      node.w = Math.ceil(text + LABEL_PAD * 2 + badge)
+    }
+
+    probe.remove()
+  }
+
+  /**
+   * 접기 손잡이를 달 노드인가.
+   *
+   * 뿌리는 지금 보고 있는 갈래다. 그걸 접으면 지도가 통째로 사라지므로 손잡이를 두지 않는다.
+   */
+  function hasBadge(node: MapNode) {
+    return node.kind !== 'root' && node.children.length > 0
+  }
+
+  /** 부모 오른쪽에서 자식 왼쪽으로 가는 곡선. */
+  function curve(x1: number, y1: number, x2: number, y2: number) {
+    const dx = Math.max((x2 - x1) * 0.5, 12)
+    return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`
+  }
+
+  function button(text: string, title: string) {
+    const b = document.createElement('button')
+    b.type = 'button'
+    b.textContent = text
+    b.title = title
+    b.setAttribute('aria-label', title)
+    return b
+  }
+
+  document.addEventListener('astro:page-load', setup)
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setup)
+  } else {
+    setup()
+  }
+</script>

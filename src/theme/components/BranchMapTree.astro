@@ -1,0 +1,37 @@
+---
+/**
+ * 갈래 지도의 뼈대. 중첩 <ul> 하나로 서브트리를 통째로 편다.
+ *
+ * 이 목록이 두 가지 일을 한다. JS 가 없거나 아직 안 돌았을 때 보이는 실체이고,
+ * 동시에 BranchMap 의 스크립트가 읽어 지도를 세우는 원본이다.
+ * 그래서 같은 자료를 JSON 으로 한 번 더 심지 않는다.
+ *
+ * 한 갈래 안에서는 하위 갈래를 먼저, 문서를 뒤에 둔다. 지도에서 가지가 위,
+ * 잎이 아래로 모여 계보가 눈에 들어온다.
+ */
+import { countDocs, type BranchNode } from '../lib/branches.js'
+import type { DocRef } from '../lib/collection-docs.js'
+
+interface Props {
+  nodes: BranchNode[]
+  docs: DocRef[]
+}
+
+const { nodes, docs } = Astro.props
+---
+
+<ul>
+  {nodes.map((child) => (
+    <li data-kind="branch" data-count={countDocs(child)}>
+      <a href={child.url}>{child.title}</a>
+      {(child.children.length > 0 || child.docs.length > 0) && (
+        <Astro.self nodes={child.children} docs={child.docs} />
+      )}
+    </li>
+  ))}
+  {docs.map((doc) => (
+    <li data-kind="doc">
+      <a href={doc.url}>{doc.title}</a>
+    </li>
+  ))}
+</ul>

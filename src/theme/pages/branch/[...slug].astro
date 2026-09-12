@@ -3,7 +3,13 @@
  * 갈래 페이지.
  *
  * 위에는 자기 계보를 두어 어디쯤인지 보이게 하고,
- * 본문(그 영역이 무엇인지 쓴 글) 다음에 하위 갈래와 속한 문서를 잇는다.
+ * 본문(그 영역이 무엇인지 쓴 글) 다음에 자기 아래를 통째로 보여준다.
+ *
+ * 무엇이 담겼든 지도를 편다. 손자까지 몇 겹이든 한 장에 들어와야 갈래를 나눈
+ * 보람이 있고, 어떤 갈래는 지도가 있고 어떤 갈래는 없으면 그게 규칙으로 읽히지 않는다.
+ *
+ * 다만 하위 갈래가 없는 갈래는 지도가 한 줄 부채꼴이라 문서 이름만 늘어선다.
+ * 그때는 지도 아래에 설명문 달린 목록을 덧붙인다. 지도는 자리를, 목록은 내용을 말한다.
  */
 import { getCollection, render } from 'astro:content'
 import config from 'virtual:blog-config'
@@ -11,6 +17,7 @@ import BaseHead from '../../components/BaseHead.astro'
 import Footer from '../../components/Footer.astro'
 import Header from '../../components/Header.astro'
 import DocList from '../../components/DocList.astro'
+import BranchMap from '../../components/BranchMap.astro'
 import CodeCopyScript from '../../components/CodeCopyScript.astro'
 import MermaidScript from '../../components/MermaidScript.astro'
 import { getBranchIndex, ancestryOf, countDocs } from '../../lib/branches.js'
@@ -51,6 +58,11 @@ const docItems = node.docs.map((doc) => ({
 // 아무것도 안 담긴 갈래가 정상적으로 존재할 수 있다. 빈 채로 두지 않고 말을 건다.
 const docCount = countDocs(node)
 const isEmpty = docCount === 0 && node.children.length === 0
+// 담긴 게 하나라도 있으면 지도를 그린다.
+const hasMap = !isEmpty
+// 하위 갈래가 없어 지도가 한 겹뿐일 때만 설명문 달린 목록을 덧붙인다.
+// 갈래가 갈라지는 순간부터는 같은 문서를 두 번 늘어놓는 셈이 된다.
+const showDocList = node.children.length === 0 && docItems.length > 0
 
 // 0 인 항목은 세지 않는다. "문서 0개 · 하위 갈래 1개" 처럼 읽히지 않도록.
 const stats = [
@@ -117,46 +129,18 @@ const stats = [
         color: var(--color-text-secondary);
         font-variant-numeric: tabular-nums;
       }
-      .child-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 0.75rem;
+      /* 지도는 눌러 보기 전에는 그냥 그림처럼 보인다. 무엇이 되는지 한 줄로 알린다. */
+      .map-hint {
+        margin: -0.35rem 0 0.75rem;
+        font-size: 0.78rem;
+        color: var(--color-text-secondary);
       }
-      .child-card {
-        display: block;
-        padding: 0.9rem 1rem;
+      .map-hint kbd {
+        font-family: var(--font-sans);
+        font-size: 0.72rem;
+        padding: 0.05rem 0.3rem;
         border: 1px solid var(--color-border);
-        border-radius: 10px;
-        background: var(--color-surface);
-        text-decoration: none;
-        transition: border-color var(--transition-speed) var(--transition-timing),
-                    background-color var(--transition-speed) var(--transition-timing);
-      }
-      .child-card:hover {
-        border-color: var(--color-accent);
-        background: var(--color-surface-secondary);
-      }
-      .child-name {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 0.75rem;
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: var(--color-text-primary);
-      }
-      .child-count {
-        font-size: 0.8rem;
-        font-weight: 400;
-        color: var(--color-text-secondary);
-        font-variant-numeric: tabular-nums;
-        flex-shrink: 0;
-      }
-      .child-desc {
-        margin: 0.3rem 0 0;
-        font-size: 0.82rem;
-        color: var(--color-text-secondary);
-        line-height: 1.5;
+        border-radius: 4px;
       }
       .branch-body {
         color: var(--color-text-primary);
@@ -186,24 +170,17 @@ const stats = [
         <Content />
       </div>
 
-      {node.children.length > 0 && (
+      {hasMap && (
         <section class="page-section">
-          <h2 class="section-title">하위 갈래</h2>
-          <div class="child-grid">
-            {node.children.map((child) => (
-              <a class="child-card" href={child.url}>
-                <span class="child-name">
-                  {child.title}
-                  <span class="child-count">{countDocs(child)}</span>
-                </span>
-                {child.description && <p class="child-desc">{child.description}</p>}
-              </a>
-            ))}
-          </div>
+          <h2 class="section-title">갈래 지도</h2>
+          <p class="map-hint">
+            숫자를 누르면 접히고, 끌면 움직입니다. <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + 휠로 확대합니다.
+          </p>
+          <BranchMap node={node} />
         </section>
       )}
 
-      {docItems.length > 0 && (
+      {showDocList && (
         <section class="page-section">
           <h2 class="section-title">이 갈래의 문서</h2>
           <DocList items={docItems} showDescription />
