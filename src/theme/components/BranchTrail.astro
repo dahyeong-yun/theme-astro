@@ -22,25 +22,59 @@ const trails = await getDocTrails(kind, id)
 
 {trails.length > 0 && (
   <nav class="branch-trails" aria-label="이 문서가 속한 갈래">
-    {trails.map((trail) => (
-      <ol class="trail">
-        {trail.map((node, depth) => (
-          <li>
-            {depth > 0 && <span class="sep" aria-hidden="true">›</span>}
-            <a href={node.url} title={node.description}>{node.title}</a>
-          </li>
-        ))}
-      </ol>
-    ))}
+    <span class="label" aria-hidden="true">갈래</span>
+    <div class="trails">
+      {trails.map((trail) => (
+        <ol class="trail">
+          {trail.map((node, depth) => (
+            <li>
+              {depth > 0 && <span class="sep" aria-hidden="true">›</span>}
+              <a href={node.url} title={node.description}>{node.title}</a>
+            </li>
+          ))}
+        </ol>
+      ))}
+    </div>
   </nav>
 )}
 
 <style>
+  /* 맨 텍스트로 두면 바로 위 갱신일 줄과 크기·색이 같아 메타데이터로 읽힌다.
+     이 문서가 어디 속하는지는 갱신일보다 중요한 정보라 그릇에 담아 떼어낸다.
+     색은 태그(회색 알약)와 갈라 두려고 포인트 색 계열로 간다. */
   .branch-trails {
     display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
+    align-items: stretch;
+    gap: 0;
     margin-top: 0.85rem;
+    padding: 0.4rem 0.65rem;
+    border: 1px solid var(--color-border-hairline);
+    border-radius: 8px;
+    background: var(--color-badge-bg);
+    /* 제목 블록 폭을 다 먹지 않게 내용만큼만 두른다. */
+    width: fit-content;
+    max-width: 100%;
+  }
+  /* 갈래 페이지 머리말의 '갈래' 라벨과 같은 무게로 둔다.
+     두 화면이 같은 것을 가리키고 있다는 게 보여야 한다. */
+  .label {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding-right: 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--color-accent);
+  }
+  .trails {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.3rem;
+    min-width: 0;
+    padding-left: 0.65rem;
+    border-left: 1px solid var(--color-border-hairline);
   }
   .trail {
     display: flex;
@@ -52,23 +86,35 @@ const trails = await getDocTrails(kind, id)
     font-size: 0.8rem;
     line-height: 1.5;
   }
+  /* 이 계보는 .prose 안에 있어서 본문 li 타이포그래피(17px, 자간, 색)가 그대로
+     새어 든다. 그동안 계보가 본문 글씨만 한 크기로 나오던 게 이것 때문이고,
+     그래서 설명문처럼 읽혔다. ol 에 준 크기가 살아남도록 여기서 되돌린다. */
   .trail li {
     display: flex;
     align-items: center;
     margin: 0;
+    font-size: inherit;
+    font-weight: 400;
+    line-height: inherit;
+    letter-spacing: normal;
+    color: inherit;
   }
   .sep {
     color: var(--color-text-secondary);
     opacity: 0.55;
     margin: 0 0.35rem;
   }
+  /* 배경이 옅게 깔려 보조색은 묻힌다. 본문색으로 올린다. */
   .trail a {
-    color: var(--color-text-secondary);
+    font-size: inherit;
+    font-weight: 400;
+    color: var(--color-text-body);
     text-decoration: none;
     transition: color var(--transition-speed) var(--transition-timing);
   }
   .trail a:hover {
     color: var(--color-accent);
+    text-decoration: underline;
   }
   /* 마지막 칸이 이 문서를 직접 담고 있는 갈래다. 거기에 무게를 준다. */
   .trail li:last-child a {
