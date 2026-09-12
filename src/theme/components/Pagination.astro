@@ -2,6 +2,9 @@
 /**
  * 목록 페이지 하단 페이지 이동.
  * 페이지가 하나뿐이면 아무것도 그리지 않는다.
+ *
+ * 모양은 global.css 의 .pagination 이 정한다. 위키 대문이 같은 모양을
+ * 스크립트로 만들어 쓰는데, 스크립트가 만든 요소에는 scoped 해시가 붙지 않는다.
  */
 interface Props {
   current: number
@@ -65,83 +68,3 @@ const numbers = pageNumbers(current, total)
     )}
   </nav>
 )}
-
-<style>
-  .pagination {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-top: 2.5rem;
-  }
-
-  .pages {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .pages li {
-    margin: 0;
-    font-size: inherit;
-    line-height: 1;
-  }
-
-  /* 숫자 칸과 이전/다음 칸이 같은 높이·같은 모서리를 쓴다 */
-  .page,
-  .step {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 32px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    text-decoration: none;
-    color: var(--color-text-secondary);
-    transition: color var(--transition-speed) var(--transition-timing),
-                background-color var(--transition-speed) var(--transition-timing);
-  }
-
-  .page {
-    min-width: 32px;
-    padding: 0 0.4rem;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .step {
-    padding: 0 0.7rem;
-  }
-
-  a.page:hover,
-  a.step:hover {
-    color: var(--color-text-primary);
-    background: var(--color-surface-secondary);
-  }
-
-  .page.current {
-    color: var(--color-accent);
-    background: var(--color-badge-bg);
-    font-weight: 600;
-  }
-
-  .step.disabled {
-    opacity: 0.35;
-  }
-
-  .gap {
-    padding: 0 0.2rem;
-    color: var(--color-text-secondary);
-    font-size: 0.85rem;
-  }
-
-  @media (max-width: 520px) {
-    .step {
-      padding: 0 0.5rem;
-      font-size: 0.8rem;
-    }
-  }
-</style>

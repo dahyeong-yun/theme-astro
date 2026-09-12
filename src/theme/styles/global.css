@@ -933,3 +933,108 @@ figure.branch-map {
   font-size: 0.95rem;
   padding: 1.5rem 0;
 }
+
+/* 쪽 이동 — Pagination.astro 가 서버에서 그리고, 위키 대문은 같은 모양을
+   스크립트로 만들어 쓴다. 스크립트가 만든 요소에는 Astro 의 scoped 해시가
+   붙지 않아 여기 전역에 둔다. .doc-list 를 여기 둔 것과 같은 이유다.
+
+   선택자를 전부 .pagination 밑으로 내려 둔 것에 이유가 있다. .page 를 전역에
+   풀면 <main class="page"> 와 정면으로 부딪힌다. */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+.pagination .pages {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pagination .pages li {
+  margin: 0;
+  font-size: inherit;
+  line-height: 1;
+}
+
+/* 숫자 칸과 이전/다음 칸이 같은 높이·같은 모서리를 쓴다 */
+.pagination .page,
+.pagination .step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-speed) var(--transition-timing),
+              background-color var(--transition-speed) var(--transition-timing);
+}
+
+.pagination .page {
+  min-width: 32px;
+  padding: 0 0.4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pagination .step {
+  padding: 0 0.7rem;
+}
+
+/* 위키 대문 쪽은 갈 서버 라우트가 없어 링크인 척하지 않고 버튼을 쓴다. */
+.pagination button.page,
+.pagination button.step {
+  font-family: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.pagination a.page:hover,
+.pagination a.step:hover,
+.pagination button.page:hover,
+.pagination button.step:hover {
+  color: var(--color-text-primary);
+  background: var(--color-surface-secondary);
+}
+
+.pagination .page.current,
+.pagination .page.current:hover {
+  color: var(--color-accent);
+  background: var(--color-badge-bg);
+  font-weight: 600;
+}
+
+.pagination .step.disabled {
+  opacity: 0.35;
+}
+
+.pagination button.step.disabled {
+  cursor: default;
+}
+
+.pagination button.step.disabled:hover {
+  color: var(--color-text-secondary);
+  background: none;
+}
+
+.pagination .gap {
+  padding: 0 0.2rem;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 520px) {
+  .pagination .step {
+    padding: 0 0.5rem;
+    font-size: 0.8rem;
+  }
+}
